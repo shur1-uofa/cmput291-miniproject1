@@ -15,17 +15,18 @@ def isDBPresent():
 def createDB():
 
 	with open(SCHEMAPATH, 'r') as f:
+		script = f.read()
 		try:
 			conn = sqlite3.connect(DBPATH)
 			cursor = conn.cursor()
 
-			cursor.executescript(f.read())
+			cursor.executescript(script)
 			conn.commit()
 
 		except sqlite3.Error as e:
 			print("Database failed to be created")
 			print(e)
-			# Remove the database we tried to create 
+			# Remove the database file we tried to create 
 			os.remove(DBPATH)
 			return False
 
@@ -49,7 +50,7 @@ def connectToDB():
 
 
 def loginScreen():
-	print("Success")
+	
 
 
 def main():
