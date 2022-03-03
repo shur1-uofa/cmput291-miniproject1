@@ -25,6 +25,7 @@ def createDB():
 		script = f.read()
 		try:
 			conn = sqlite3.connect(DBPATH)
+			conn.row_factory = sqlite3.Row
 			cursor = conn.cursor()
 
 			cursor.executescript(script)
@@ -47,6 +48,7 @@ def connectToDB():
 
 	try:
 		conn = sqlite3.connect(DBPATH)
+		conn.row_factory = sqlite3.Row
 		cursor = conn.cursor()
 		cursor.execute('PRAGMA foreign_keys=ON')
 		conn.commit()
