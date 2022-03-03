@@ -6,6 +6,10 @@ conn = None
 cursor = None
 DBPATH = "./test.db"
 SCHEMAPATH = "./prj-tables.txt"
+user_info = {
+	"id": None,
+	"name": None
+}
 
 # Check if DB exists
 def isDBPresent():
@@ -53,6 +57,53 @@ def connectToDB():
 	
 	return True
 
+
+def closeProgram():
+	conn.close()
+	exit()
+
+
+def InitScreen():
+
+	while True:
+		print("----- Select your options -----")
+		print("Login - 1")
+		print("Register (as customer) - 2")
+		print("Exit program - 3")
+		# Call strip function to ignore spaces
+		resp = str(input("Type in your selection: ")).strip()
+
+		if resp == "1":
+			print()
+			loginScreen()
+		elif resp == "2":
+			registerScreen()
+		elif resp == "3":
+			print("Exitting program")
+			closeProgram()
+		else:
+			print("Invalid selection. Try again")
+			input("...")
+
+
+def loginScreen():
+	
+	cursor.execute("INSERT INTO customers VALUES('0001', 'Scott', 'pass')")
+
+	while True:
+		print("----- Login -----")
+		id = str(input("ID: ")).strip()
+		pwd = str(input("Password: ")).strip()
+		
+		cursor.execute("SELECT * FROM customers WHERE cid=:id", { "id":id })
+		row = cursor.fetchone()
+			
+			
+
+
+
+def registerScreen():
+	print("register")
 
 
 def main():
