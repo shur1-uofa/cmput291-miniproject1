@@ -65,6 +65,19 @@ def closeProgram():
 	exit()
 
 
+# Returns True if Yes. Return False if No. 
+def getUserYesOrNo():
+	resp = ""
+	while resp != "N" and resp != "Y":
+		resp = str(input("N or Y: ")).strip().upper()
+		if resp == "Y":
+			return True
+		elif resp == "N":
+			return False
+		else:
+			input("Invalid response. Try again...")
+
+
 def InitScreen():
 
 	while True:
@@ -90,22 +103,67 @@ def InitScreen():
 
 def loginScreen():
 	
-	cursor.execute("INSERT INTO customers VALUES('0001', 'Scott', 'pass')")
-
 	while True:
 		print("----- Login -----")
 		id = str(input("ID: ")).strip()
 		pwd = str(input("Password: ")).strip()
 		
+		# Try logging in as customer
 		cursor.execute("SELECT * FROM customers WHERE cid=:id", { "id":id })
 		row = cursor.fetchone()
-			
-			
+		
+		# Case : customer with wrong password
+		if row != None and row["pwd"] != pwd:
+			print("Invalid credentials. Try again?")
+			resp = getUserYesOrNo()
+			if resp:
+				continue
+			else:
+				return
+		# Case : customer with right password
+		elif row != None and row["pwd"] == pwd:
+			user_info["id"] = id
+			user_info["name"] = row["name"]
 
+			print("Welcome " + user_info["name"])
+			customerMenu()
+			break
+
+		# Try logging in as editor
+		cursor.execute("SELECT * FROM editors WHERE eid=:id",{ "id":id })
+		row = cursor.fetchone()
+		
+		# Case : invalid id or editor with wrong password
+		if row == None or row["pwd"] != pwd:
+			print("Invalid credentials. Try again?")
+			resp = getUserYesOrNo()
+			if resp:
+				continue
+			else:
+				return
+		# Case : editor with right password
+		else:
+			user_info["id"] = id
+			
+			print("Welcome editor " + id)
+			editorMenu()
+			break
 
 
 def registerScreen():
-	print("register")
+	print("register screen")
+
+
+def customerMenu():
+	print("in customer menu")
+
+def editorMenu():
+	print("in editor menu")
+
+#FIXME: Delete this when handing it in. 
+def insertTestData():
+	cursor.execute("INSERT INTO customers VALUES('0001', 'Scott', 'scottpass')")
+	cursor.execute("INSERT INTO editors VALUES('0002', 'editorpass')")
 
 
 def main():
@@ -119,7 +177,8 @@ def main():
 		if not success:
 			print("Exiting program")
 			return
-	
+
+	insertTestData()
 	InitScreen()
 
 
