@@ -1,55 +1,72 @@
 import sqlite3
-from pathlib import Path
+import os
 
 conn = None
 cursor = None
 DBPATH = "./test.db"
 SCHEMAPATH = "./prj-tables.txt"
 
+# Check if DB exists
 def isDBPresent():
-	my_file = Path(DBPATH)
-	return my_file.is_file()
+	return os.path.exists("./test.db")
 
+# Create database with the specified schema file provided
+# Return True if success. False otherwise
 def createDB():
-	conn = sqlite3.connect(DBPATH)
-	cursor = conn.cursor()
 
-	with open(SCHEMAPATH) as f:
+	with open(SCHEMAPATH, 'r') as f:
 		try:
-			cursor.execute(f.read().decode('utf-8'), multi=True)
-		except:
+			conn = sqlite3.connect(DBPATH)
+			cursor = conn.cursor()
+
+			cursor.executescript(f.read())
+			conn.commit()
+
+		except sqlite3.Error as e:
 			print("Database failed to be created")
+			print(e)
+			# Remove the database we tried to create 
+			os.remove(DBPATH)
 			return False
 
-	conn.commit()
 	return True
 
+# Connect to database given by DBPATH global var
+# Return True if success. False otherwise
 def connectToDB():
+
 	try:
 		conn = sqlite3.connect(DBPATH)
 		cursor = conn.cursor()
 		cursor.execute('PRAGMA foreign_keys=ON')
 		conn.commit()
-	except:
+	except sqlite3.Error as e:
 		print("Failed to connect to database")
+		print(e)
 		return False
+	
+	return True
+
 
 def loginScreen():
 	print("Success")
 
 
-
 def main():
 	if not isDBPresent():
-		req = createDB()
-		if not req:
+		success  = createDB()
+		if not success:
+			print("Exiting program")
 			return
 	else:
-		connectToDB()
+		success = connectToDB()
+		if not success:
+			print("Exiting program")
+			return
 	
 	loginScreen()
 
 
-# If this file is directly being executed (not imported or anything) then run this...
+# Run below if this file is directly being executed
 if __name__ == "__main__":
 	main()
