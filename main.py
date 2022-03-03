@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import time
 
 conn = None
 cursor = None
@@ -10,9 +11,11 @@ SCHEMAPATH = "./prj-tables.txt"
 def isDBPresent():
 	return os.path.exists("./test.db")
 
+
 # Create database with the specified schema file provided
 # Return True if success. False otherwise
 def createDB():
+	global conn, cursor
 
 	with open(SCHEMAPATH, 'r') as f:
 		script = f.read()
@@ -32,9 +35,11 @@ def createDB():
 
 	return True
 
+
 # Connect to database given by DBPATH global var
 # Return True if success. False otherwise
 def connectToDB():
+	global conn, cursor
 
 	try:
 		conn = sqlite3.connect(DBPATH)
@@ -49,9 +54,6 @@ def connectToDB():
 	return True
 
 
-def loginScreen():
-	
-
 
 def main():
 	if not isDBPresent():
@@ -65,7 +67,7 @@ def main():
 			print("Exiting program")
 			return
 	
-	loginScreen()
+	InitScreen()
 
 
 # Run below if this file is directly being executed
