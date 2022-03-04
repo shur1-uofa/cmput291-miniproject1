@@ -213,7 +213,43 @@ def registerScreen():
 
 
 def customerMenu():
-	print("in customer menu")
+	
+	while True:
+		print("----- Customer Menu -----")
+		print("Select your options")
+		print("Start a session - 1")
+		print("Search for movies - 2")
+		print("End watching a movie - 3")
+		print("End the session - 4")
+		print("Log out - 5")
+		print("Exit program - 6")
+		resp = str(input("Your selection: ")).strip()
+
+		# TODO: fill out functionalities
+		if resp == "1":
+			# Do start session stuff
+			print("")
+		elif resp == "2":
+			# Do search movie stuff
+			print()
+		elif resp == "3":
+			# Do end movie stuff
+			print()
+		elif resp == "4":
+			# Do end session stuff
+			print()
+		elif resp == "5":
+			print("Logging out")
+			user_info["id"] = None
+			user_info["name"] = None
+			return
+		elif resp == "6":
+			print("Exitting program")
+			closeProgram()
+		else:
+			input("Invalid selection. Try again...")
+			continue
+
 
 def editorMenu():
 	print("in editor menu")
