@@ -252,7 +252,34 @@ def customerMenu():
 
 
 def editorMenu():
-	print("in editor menu")
+
+	while True:
+		print("----- Editor Menu -----")
+		print("Select your options")
+		print("Add a movie - 1")
+		print("Update a recommendation - 2")
+		print("Log out - 3")
+		print("Exit program - 4")
+		resp = str(input("Your selection: ")).strip()
+
+		# TODO: fill out functionalities
+		if resp == "1":
+			# Do add movie stuff
+			print("")
+		elif resp == "2":
+			# Do update recommends stuff
+			print()
+		elif resp == "3":
+			print("Logging out")
+			user_info["id"] = None
+			return
+		elif resp == "4":
+			print("Exitting program")
+			closeProgram()
+		else:
+			input("Invalid selection. Try again...")
+			continue
+
 
 #Prompts a user for movie keywords and 
 #returns a list of all movies ordered by number of matches  
