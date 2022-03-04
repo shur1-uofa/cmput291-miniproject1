@@ -13,7 +13,7 @@ user_info = {
 
 # Check if DB exists
 def isDBPresent():
-	return os.path.exists("./test.db")
+	return os.path.exists(DBPATH)
 
 
 # Create database with the specified schema file provided
