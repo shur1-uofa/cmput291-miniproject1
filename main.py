@@ -165,6 +165,35 @@ def insertTestData():
 	cursor.execute("INSERT INTO customers VALUES('0001', 'Scott', 'scottpass')")
 	cursor.execute("INSERT INTO editors VALUES('0002', 'editorpass')")
 
+#Prompts a user for movie keywords and 
+#returns a list of all movies ordered by number of matches  
+def search4movies():
+	#User Searches for movie
+	movie_input = str(input("Search for a movie: "))
+
+	#Identify keywords of user input
+	split_input = movie_input.split()
+
+	#Add a 'number of matches' attribute to movies
+	cursor.executescript("""CREATE TEMP TABLE temp AS SELECT * FROM movies;
+			    ALTER TABLE temp ADD num int DEFAULT 0;
+			    """)
+
+	#increment the 'number of matches' for each row
+	for x in split_input:
+	    cursor.execute("""UPDATE temp
+			SET num = num + 1
+			WHERE title LIKE '%'||:x||'%'""",{'x' : x})
+
+	#select and order results
+	cursor.execute("""SELECT *
+		    FROM temp
+		    WHERE num > 0
+		    ORDER BY num DESC;""")
+	rows = cursor.fetchall()
+	conn.rollback()
+	conn.close()
+	return rows
 
 def main():
 	if not isDBPresent():
