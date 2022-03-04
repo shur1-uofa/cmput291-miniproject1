@@ -308,7 +308,6 @@ def search4movies():
 		    ORDER BY num DESC;""")
 	rows = cursor.fetchall()
 	conn.rollback()
-	conn.close()
 	return rows
 
 def main():
