@@ -151,7 +151,65 @@ def loginScreen():
 
 
 def registerScreen():
-	print("register screen")
+
+	while True:
+		print("----- Register -----")
+		id = str(input("Provide ID: ")).strip()
+		name = str(input("Provide name: "))
+		#FIXME: password must be not visible at time of typing
+		pwd = str(input("Provide password: "))
+		
+		if len(pwd) < 1 or len(name) < 1 or len(id) < 1:
+			input("Please input appropriate fields...")
+			continue
+
+		# First it cannot have the same id as an editor's
+		try:
+			cursor.execute("SELECT 1 FROM editors WHERE eid = :id LIMIT 1", { "id": id } )
+			res = cursor.fetchone()
+		except sqlite3.Error as e:
+			print("Something went wrong with sqlite3")
+			print(e)
+			print()
+			return
+
+		# If id is already taken by an editor
+		if res != None:
+			input("Invalid ID. Please try again...")
+			continue
+
+		# Now check if id already exists as customer id
+		try:
+			cursor.execute("SELECT 1 FROM customers WHERE cid = :id LIMIT 1", { "id": id} )
+			res = cursor.fetchone()
+		except sqlite3.Error as e:
+			print("Something went wrong with sqlite3")
+			print(e)
+			print()
+			return
+
+		if res != None:
+			input("Invalid ID. Please try again...")
+			continue
+
+		# Now since ID is unique, and we checked little things, it should be good to go
+		try:
+			cursor.execute("INSERT INTO customers VALUES(?, ?, ?)", (id, name, pwd))
+			conn.commit()
+		except sqlite3.Error as e:
+			print("Could not add your registration information")
+			print(e)
+			print()
+			return
+		user_info["id"] = id
+		user_info["name"] = name
+
+		print("Successfully registered.")
+		print()
+		customerMenu()
+		break
+
+	return
 
 
 def customerMenu():
@@ -159,11 +217,6 @@ def customerMenu():
 
 def editorMenu():
 	print("in editor menu")
-
-#FIXME: Delete this when handing it in. 
-def insertTestData():
-	cursor.execute("INSERT INTO customers VALUES('0001', 'Scott', 'scottpass')")
-	cursor.execute("INSERT INTO editors VALUES('0002', 'editorpass')")
 
 #Prompts a user for movie keywords and 
 #returns a list of all movies ordered by number of matches  
@@ -207,7 +260,6 @@ def main():
 			print("Exiting program")
 			return
 
-	insertTestData()
 	InitScreen()
 
 

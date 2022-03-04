@@ -67,7 +67,7 @@ if __name__ == "__main__":
 			cursor.executescript(f.read())
 			conn.commit()
 			print("Successfully inserted test data")
-		except sqllite3.Error as e:
+		except sqlite3.Error as e:
 			print("Failed to insert test data")
 			print(e)
 		
