@@ -50,7 +50,6 @@ def connectToDB():
 		conn = sqlite3.connect(DBPATH)
 		conn.row_factory = sqlite3.Row
 		cursor = conn.cursor()
-		cursor.execute('PRAGMA foreign_keys=ON')
 		conn.commit()
 	except sqlite3.Error as e:
 		print("Failed to connect to database")
@@ -78,10 +77,11 @@ def getUserYesOrNo():
 			input("Invalid response. Try again...")
 
 
-def InitScreen():
+def InitScreen():	
 
 	while True:
-		print("----- Select your options -----")
+		print("----- Initial Screen -----")
+		print("Select your options")
 		print("Login - 1")
 		print("Register (as customer) - 2")
 		print("Exit program - 3")
@@ -92,6 +92,7 @@ def InitScreen():
 			print()
 			loginScreen()
 		elif resp == "2":
+			print()
 			registerScreen()
 		elif resp == "3":
 			print("Exitting program")
@@ -105,13 +106,18 @@ def loginScreen():
 	
 	while True:
 		print("----- Login -----")
-		id = str(input("ID: ")).strip()
+		id = str(input("ID: ")).strip().upper()
 		pwd = str(input("Password: ")).strip()
 		
 		# Try logging in as customer
-		cursor.execute("SELECT * FROM customers WHERE cid=:id", { "id":id })
-		row = cursor.fetchone()
-		
+		try:
+			cursor.execute("SELECT * FROM customers WHERE UPPER(cid) = UPPER(:id)", { "id":id })
+			row = cursor.fetchone()
+		except sqlite3.Error as e:
+			print("Something went wrong with sqlite3")
+			print(e)
+			return
+
 		# Case : customer with wrong password
 		if row != None and row["pwd"] != pwd:
 			print("Invalid credentials. Try again?")
@@ -130,9 +136,14 @@ def loginScreen():
 			break
 
 		# Try logging in as editor
-		cursor.execute("SELECT * FROM editors WHERE eid=:id",{ "id":id })
-		row = cursor.fetchone()
-		
+		try:
+			cursor.execute("SELECT * FROM editors WHERE UPPER(eid) = UPPER(:id)",{ "id":id })
+			row = cursor.fetchone()
+		except sqlite3.Error as e:
+			print("Something went wrong with sqlite3")
+			print(e)
+			return
+
 		# Case : invalid id or editor with wrong password
 		if row == None or row["pwd"] != pwd:
 			print("Invalid credentials. Try again?")
@@ -165,7 +176,7 @@ def registerScreen():
 
 		# First it cannot have the same id as an editor's
 		try:
-			cursor.execute("SELECT 1 FROM editors WHERE eid = :id LIMIT 1", { "id": id } )
+			cursor.execute("SELECT 1 FROM editors WHERE UPPER(eid) = UPPER(:id) LIMIT 1", { "id": id } )
 			res = cursor.fetchone()
 		except sqlite3.Error as e:
 			print("Something went wrong with sqlite3")
@@ -175,12 +186,16 @@ def registerScreen():
 
 		# If id is already taken by an editor
 		if res != None:
-			input("Invalid ID. Please try again...")
-			continue
+			print("Invalid ID. Try again?")
+			resp = getUserYesOrNo()
+			if resp:
+				continue
+			else:
+				break
 
 		# Now check if id already exists as customer id
 		try:
-			cursor.execute("SELECT 1 FROM customers WHERE cid = :id LIMIT 1", { "id": id} )
+			cursor.execute("SELECT 1 FROM customers WHERE UPPER(cid) = UPPER(:id) LIMIT 1", { "id": id} )
 			res = cursor.fetchone()
 		except sqlite3.Error as e:
 			print("Something went wrong with sqlite3")
@@ -189,8 +204,12 @@ def registerScreen():
 			return
 
 		if res != None:
-			input("Invalid ID. Please try again...")
-			continue
+			input("Invalid ID. Try again?")
+			resp = getUserYesOrNo()
+			if resp:
+				continue
+			else:
+				break
 
 		# Now since ID is unique, and we checked little things, it should be good to go
 		try:
