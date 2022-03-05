@@ -309,7 +309,62 @@ def search4movies():
 	rows = cursor.fetchall()
 	conn.rollback()
 	return rows
-
+      
+#Prompts for movie details and cast members and adds them to the database if granted
+def addaMovie():
+    while True:
+        try:
+            movie_id = int(input("Enter the movie_id: "))
+            title = str(input("Enter the title: " ))
+            year = int(input("Enter the year: "))
+            runtime = int(input("Enter the runtime: " ))
+            cursor.execute("""INSERT INTO movies VALUES (?,?,?,?);""",(movie_id, title, year, runtime))
+        except ValueError:
+            print('Invalid input. Try again.')
+            continue
+        except sqlite3.IntegrityError:
+            print("Movie id taken. Try again.")
+            continue
+        else:
+            break
+    while True:
+        while True:
+            try:
+                cast_id = int(input("Enter cast id (integer): "))
+            except ValueError:
+                print('Invalid Input.Try again.')
+                continue
+            else:
+                break
+        cursor.execute("""SELECT m.name, m.birthyear FROM casts c, moviePeople m WHERE c.pid = m.pid AND c.pid = :cast_id;""", {'cast_id' : cast_id })
+        person = cursor.fetchall()
+        if len(person) == 0:
+            print("The person does not exist in the database.")
+            try:
+                name = str(input("Enter name of person: " ))
+                birthyear = int(input("Enter birthyear (integer): " ))
+            except ValueError:
+                print("Invalid Input. Try again.")
+                continue
+            else:
+                role = str(input("Enter the role: "))
+                cursor.execute("""INSERT INTO moviePeople VALUES (?,?,?);""", (cast_id, name, birthyear))
+                cursor.execute("""INSERT INTO casts VALUES (?,?,?);""", (movie_id, cast_id, role))
+        else:
+            print('Name:' + str(person[0][0]) + '\nBirthYear: ' + str(person[0][1]))
+            print("Provide role for this person ? ")
+            if getUserYesOrNo() == 1:
+                role = str(input("Enter the role: " ))
+                cursor.execute("""INSERT INTO casts VALUES (?,?,?);""", (movie_id, cast_id, role))
+        print("Add more cast members ?")
+        if getUserYesOrNo() == 0:
+            break
+    print("Save movie in the database ?")
+    if getUserYesOrNo() == 1:
+        conn.commit()
+        return
+    conn.rollback()
+	
 def main():
 	if not isDBPresent():
 		success  = createDB()
