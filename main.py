@@ -299,9 +299,39 @@ def editorMenu():
 			input("Invalid selection. Try again...")
 			continue
 
+#Returns a list of movie pairings and their respective number of customers
+#timerange = 'monthly','annual',or 'alltime'
+#Output_format: List of tuples of the form (mid, mid,number of customers)
+def report(timerange):
+    # make the watch table only have 'watched' movies
+    cursor.execute("""CREATE TEMP TABLE watched AS SELECT w.sid, w.cid, w.mid FROM watch w, movies m WHERE w.mid = m.mid AND (w.duration + w.duration) >= m.runtime;""")
+
+    # make the watch table only have values in the timerange
+    if timerange == 'monthly':
+        cursor.execute("""CREATE TEMP TABLE watchedwithrange AS SELECT DISTINCT w.mid, w.cid FROM watched w, sessions s WHERE w.sid = s.sid AND s.sdate >= date('now','-30 days');""")
+    elif timerange == 'annual':
+        cursor.execute("""CREATE TEMP TABLE watchedwithrange AS SELECT DISTINCT w.mid, w.cid FROM watched w, sessions s WHERE w.sid = s.sid AND s.sdate >= date('now','-365 days');""")
+    elif timerange == 'alltime':
+        cursor.execute("""CREATE TEMP TABLE watchedwithrange AS SELECT DISTINCT w.mid, w.cid FROM watched w, sessions s WHERE w.sid = s.sid;""")
+    else:
+        print("Invalid timerange.")
+        return
+
+    # for each customer, do the cartesian product of the movies they've watched and group them
+    cursor.execute("""SELECT w1.mid AS mid1, w2.mid as mid2, COUNT(*) AS count FROM watchedwithrange w1, watchedwithrange w2 WHERE w1.cid = w2.cid AND w1.mid != w2.mid GROUP BY w1.mid, w2.mid ORDER BY count DESC;""")
+
+    # get rid of redundancies
+    p = cursor.fetchall()
+    for x in p:
+        for y in p:
+            if y[0] == x[1] and x[0] == y[1]:
+                p.remove(y)
+    return p
+    conn.rollback()
 
 #Prompts a user for movie keywords and 
-#returns a list of all movies ordered by number of matches  
+#returns a list of all movies ordered by number of matches
+#Output_format: list of tuples of the form (mid, title, year, runtime, numberofmatches)
 def search4movies():
 	#User Searches for movie
 	movie_input = str(input("Search for a movie: "))
@@ -329,7 +359,7 @@ def search4movies():
 	conn.rollback()
 	return rows
       
-#Prompts for movie details and cast members and adds them to the database if granted
+#Prompts for movie details and cast members and adds them to the database if granted by the user
 def addaMovie():
     while True:
         try:
