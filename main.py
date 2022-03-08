@@ -332,7 +332,7 @@ def report(timerange):
 
 #Prompts a user for movie keywords and
 #returns a list of all movies ordered by number of matches
-#Output_format: list of tuples of the form (mid, title, year, numberofmatches)
+#Output_format: list of tuples of the form (mid, title, numberofmatches)
 def search4movies():
         #User Searches for movie
         movie_input = str(input("Search for a movie: "))
@@ -354,7 +354,7 @@ def search4movies():
                         OR EXISTS ( SELECT * FROM casts c WHERE movies.mid = c.mid AND c.role LIKE '%'||:x||'%');""",{'x' : x})
 
         #select and order results
-        cursor.execute("""SELECT *
+        cursor.execute("""SELECT mid, title, runtime
                     FROM movies
                     WHERE runtime > 0
                     ORDER BY runtime DESC;""")
