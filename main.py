@@ -366,8 +366,42 @@ class CustomerMenu(Menu):
 				input("Invalid selection. Try again...")
 				continue
 
+	#Prompts a user for movie keywords and
+	#returns a list of all movies ordered by number of matches
+	#Output_format: list of tuples of the form (mid, title, numberofmatches)
+	def search4movies(self):
+		# Get cursor and conn objects
+		conn = self._db.getConn()
+		cursor = self._db.getCursor()
 
+		#User Searches for movie
+		movie_input = str(input("Search for a movie: "))
 
+		#Identify keywords of user input
+		split_input = movie_input.split()
+
+		#Make runtime be a temporary 'number of matches' column
+		cursor.execute("""UPDATE movies
+						SET runtime = 0;
+							""")
+
+		#increment the 'number of matches' for each row
+		for x in split_input:
+			cursor.execute("""UPDATE movies
+						SET runtime = runtime + 1
+						WHERE title LIKE '%'||:x||'%'
+						OR EXISTS ( SELECT * FROM casts c, moviePeople p WHERE movies.mid = c.mid AND p.pid = c.pid AND p.name LIKE '%'||:x||'%')
+						OR EXISTS ( SELECT * FROM casts c WHERE movies.mid = c.mid AND c.role LIKE '%'||:x||'%');""",{'x' : x})
+
+		#select and order results
+		cursor.execute("""SELECT mid, title, runtime
+					FROM movies
+					WHERE runtime > 0
+					ORDER BY runtime DESC;""")
+		rows = cursor.fetchall()
+		conn.rollback()
+		return rows
+	
 	# Prompts a user to start a session
 	def startSession(self):
 		# Get cursor and conn objects
@@ -507,43 +541,6 @@ class EditorMenu(Menu):
 		p = cursor.fetchall()
 		conn.rollback()
 		return p
-
-	#Prompts a user for movie keywords and
-	#returns a list of all movies ordered by number of matches
-	#Output_format: list of tuples of the form (mid, title, numberofmatches)
-	def search4movies(self):
-		# Get cursor and conn objects
-		conn = self._db.getConn()
-		cursor = self._db.getCursor()
-
-		#User Searches for movie
-		movie_input = str(input("Search for a movie: "))
-
-		#Identify keywords of user input
-		split_input = movie_input.split()
-
-		#Make runtime be a temporary 'number of matches' column
-		cursor.execute("""UPDATE movies
-						SET runtime = 0;
-							""")
-
-		#increment the 'number of matches' for each row
-		for x in split_input:
-			cursor.execute("""UPDATE movies
-						SET runtime = runtime + 1
-						WHERE title LIKE '%'||:x||'%'
-						OR EXISTS ( SELECT * FROM casts c, moviePeople p WHERE movies.mid = c.mid AND p.pid = c.pid AND p.name LIKE '%'||:x||'%')
-						OR EXISTS ( SELECT * FROM casts c WHERE movies.mid = c.mid AND c.role LIKE '%'||:x||'%');""",{'x' : x})
-
-		#select and order results
-		cursor.execute("""SELECT mid, title, runtime
-					FROM movies
-					WHERE runtime > 0
-					ORDER BY runtime DESC;""")
-		rows = cursor.fetchall()
-		conn.rollback()
-		return rows
-		  
 
 	#Prompts for movie details and cast members and adds them to the database if granted by the user
 	def addaMovie(self):
