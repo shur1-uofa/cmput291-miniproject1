@@ -487,31 +487,24 @@ class EditorMenu(Menu):
 		conn = self._db.getConn()
 		cursor = self._db.getCursor()
 
-		# make the watch table only have 'watched' movies
-		cursor.execute("""CREATE TEMP TABLE watched AS SELECT w.sid, w.cid, w.mid FROM watch w, movies m WHERE w.mid = m.mid AND (w.duration + w.duration) >= m.runtime;""")
-
-		# make the watch table only have values in the timerange
 		if timerange == 'monthly':
-			cursor.execute("""CREATE TEMP TABLE watchedwithrange AS SELECT DISTINCT w.mid, w.cid FROM watched w, sessions s WHERE w.sid = s.sid AND s.sdate >= date('now','-30 days');""")
+			datestring = { 'date' : (datetime.date.today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d') }
 		elif timerange == 'annual':
-			cursor.execute("""CREATE TEMP TABLE watchedwithrange AS SELECT DISTINCT w.mid, w.cid FROM watched w, sessions s WHERE w.sid = s.sid AND s.sdate >= date('now','-365 days');""")
+			datestring = { 'date' : (datetime.date.today() - datetime.timedelta(days=365)).strftime('%Y-%m-%d') }
 		elif timerange == 'alltime':
-			cursor.execute("""CREATE TEMP TABLE watchedwithrange AS SELECT DISTINCT w.mid, w.cid FROM watched w, sessions s WHERE w.sid = s.sid;""")
+			datestring = { 'date' : '' }
 		else:
-			print("Invalid timerange.")
+			raise Exception("report() function parameter invalid. It should be 'monthly', 'annual', or 'alltime'.")
 			return
 
-		# for each customer, do the cartesian product of the movies they've watched and group them
-		cursor.execute("""CREATE TEMP TABLE pairings AS SELECT w1.mid AS mid1, w2.mid as mid2, COUNT(*) AS count FROM watchedwithrange w1, watchedwithrange w2 WHERE w1.cid = w2.cid AND w1.mid != w2.mid GROUP BY w1.mid, w2.mid ORDER BY count DESC;""")
-		
-		#set up indicator column for each tuple
-		cursor.execute("""ALTER TABLE pairings ADD indicator DEFAULT 0;""")
-		cursor.execute("""UPDATE pairings SET indicator = 1 WHERE EXISTS( SELECT * FROM recommendations WHERE pairings.mid1 = watched AND pairings.mid2 = recommended);""")
-		
-		cursor.execute("""SELECT * FROM pairings;""")
+	    cursor.execute("""WITH watched AS (SELECT w.sid, w.cid, w.mid FROM watch w, movies m WHERE w.mid = m.mid AND (w.duration + w.duration) >= m.runtime),
+                        watchedwithrange AS (SELECT DISTINCT w.mid, w.cid FROM watched w, sessions s WHERE w.sid = s.sid AND s.sdate >= :date),
+                        pairings AS (SELECT w1.mid AS mid1, w2.mid as mid2, COUNT(*) AS count FROM watchedwithrange w1, watchedwithrange w2 WHERE w1.cid = w2.cid AND w1.mid != w2.mid GROUP BY w1.mid, w2.mid ORDER BY count DESC),
+                        pairingswithindic AS ( SELECT mid1, mid2, count, (1) as indic FROM pairings WHERE EXISTS( SELECT * FROM recommendations WHERE pairings.mid1 = watched AND pairings.mid2 = recommended))
+                        SELECT mid1, mid2, count, indic FROM pairings left outer join pairingswithindic using (mid1,mid2,count);""", datestring);
 		p = cursor.fetchall()
-		return p
 		conn.rollback()
+		return p
 
 	#Prompts a user for movie keywords and
 	#returns a list of all movies ordered by number of matches
