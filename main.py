@@ -471,7 +471,7 @@ class CustomerMenu(Menu):
 				UPDATE watch 
 				SET duration = :watchtime 
 				WHERE mid = :mid AND sid = :sid AND cid = :cid
-				''', {"mid":mid, "sid":sid, "cid":cid, "watchtime":watchMins})
+				''', {"mid":self._mid, "sid":self._sid, "cid":self._id, "watchtime":watchMins})
 		self._mid = None
 		self._midStart = None
 		conn.commit()
