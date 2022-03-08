@@ -591,14 +591,14 @@ class EditorMenu(Menu):
 			else:
 				print('Name:' + str(person[0][0]) + '\nBirthYear: ' + str(person[0][1]))
 				print("Provide role for this person ? ")
-				if getUserYesOrNo() == 1:
+				if self.getUserYesOrNo() == 1:
 					role = str(input("Enter the role: " ))
 					cursor.execute("""INSERT INTO casts VALUES (?,?,?);""", (movie_id, cast_id, role))
 			print("Add more cast members ?")
-			if getUserYesOrNo() == 0:
+			if self.getUserYesOrNo() == 0:
 				break
 		print("Save movie in the database ?")
-		if getUserYesOrNo() == 1:
+		if self.getUserYesOrNo() == 1:
 			conn.commit()
 			return
 		conn.rollback()
