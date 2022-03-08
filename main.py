@@ -267,7 +267,8 @@ def customerMenu():
 		# TODO: fill out functionalities
 		if resp == "1":
 			# Do start session stuff
-			print("")
+			print("Starting a session")
+			startSession()
 		elif resp == "2":
 			# Do search movie stuff
 			print()
@@ -284,7 +285,7 @@ def customerMenu():
 			user_info["name"] = None
 			return
 		elif resp == "6":
-			print("Exitting program")
+			print("Exiting program")
 			closeProgram()
 		else:
 			input("Invalid selection. Try again...")
@@ -498,6 +499,25 @@ def addaMovie():
         conn.commit()
         return
     conn.rollback()
+	
+# Prompts a user to start a session
+def startSession():
+	cursor = conn.cursor()
+	cursor.execute("SELECT MAX(sid) FROM sessions")
+	max_id = cursor.fetchone()[0]
+	if max_id == None:
+		new_id = 1
+	else:
+		new_id = int(max_id) + 1
+	if user_info["session start time"] == None:
+		session_date = datetime.date.today()
+		session_start_time = time.time()
+		cursor.execute("""INSERT INTO sessions VALUES (?,?,?,NULL);""", (new_id, user_info["id"], session_date))
+		user_info["session start time"] = session_start_time
+		print("Session started successfully")
+		conn.commit()
+	else:
+		print("There is already a session running")
 	
 def main():
 	if not isDBPresent():
