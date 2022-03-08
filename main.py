@@ -1,6 +1,7 @@
 import sqlite3
 import os
 import time
+import datetime
 
 conn = None
 cursor = None
@@ -254,6 +255,7 @@ def customerMenu():
 		elif resp == "3":
 			# Do end movie stuff
 			print()
+			endWatchMovie()
 		elif resp == "4":
 			# Do end session stuff
 			print()
@@ -268,6 +270,67 @@ def customerMenu():
 		else:
 			input("Invalid selection. Try again...")
 			continue
+
+# FIXME: temp variables. unfortunately.
+#mid = 110
+#sid = 1
+#cid = "c500"
+#movieStart = datetime.datetime.now()
+
+def endWatchMovie():
+	# The clarifcation states that only one movie is watched at a time.
+	# So we will not include the functionality 
+	# "if multiple movie is being watched, you have the choice to select one"
+	# Because it doesn't make sense. 
+	#FIXME: remove global variables
+	global mid, sid, cid, movieStart
+
+	# Check if a movie is being currently watched
+	if mid == None:
+		# If no movies being watched then return
+		print("No movie is being watched.")
+		return
+	
+	# Find minutes watched
+	diffTime = datetime.datetime.now() - movieStart
+	watchMins = diffTime.total_seconds() // 60
+
+	# Get runtime of movie (and also title)
+	cursor.execute('''
+			SELECT title, runtime 
+			FROM movies
+			WHERE mid = :mid
+			''', {"mid":mid})
+	row = cursor.fetchone()
+	runtime = row["runtime"]
+	mtitle = row["title"]
+	
+	# Check if current movie has finished watching
+	if watchMins > runtime:
+		print("No movie is being watched")
+		watchMins = runtime
+	else:
+		print("You are currently watching " + mtitle)
+		print("Do you want to stop watching it?")
+		resp = getUserYesOrNo()
+		# If reply is no then return	
+		if not resp:
+			print("Going back to main menu")
+			return
+
+	# End watching movie
+	cursor.execute('''
+			UPDATE watch 
+			SET duration = :watchtime 
+			WHERE mid = :mid AND sid = :sid AND cid = :cid
+			''', {"mid":mid, "sid":sid, "cid":cid, "watchtime":watchMins})
+	mid = None
+	conn.commit()
+	return
+
+
+
+
 
 
 def editorMenu():
