@@ -613,8 +613,8 @@ def main():
 		print("Too many arguments")
 		return
 
-	DBPATH = sys.argv[2]
-	SCHEMAPATH = sys.argv[3]
+	DBPATH = sys.argv[1]
+	SCHEMAPATH = sys.argv[2]
 
 	if not os.path.exists(DBPATH) or not os.path.exists(SCHEMAPATH):
 		print("Please give a valid file")
