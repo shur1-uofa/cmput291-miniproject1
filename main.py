@@ -2,6 +2,7 @@ import sqlite3
 import os
 import time
 import datetime
+from getpass import getpass
 
 conn = None
 cursor = None
@@ -69,7 +70,7 @@ def closeProgram():
 def getUserYesOrNo():
 	resp = ""
 	while resp != "N" and resp != "Y":
-		resp = str(input("N or Y: ")).strip().upper()
+		resp = input("N or Y: ").strip().upper()
 		if resp == "Y":
 			return True
 		elif resp == "N":
@@ -87,7 +88,7 @@ def InitScreen():
 		print("Register (as customer) - 2")
 		print("Exit program - 3")
 		# Call strip function to ignore spaces
-		resp = str(input("Type in your selection: ")).strip()
+		resp = input("Type in your selection: ").strip()
 
 		if resp == "1":
 			print()
@@ -107,9 +108,9 @@ def loginScreen():
 	
 	while True:
 		print("----- Login -----")
-		id = str(input("ID: ")).strip().upper()
-		pwd = str(input("Password: ")).strip()
-		
+		id = input("ID: ").upper()
+		pwd = getpass("Password: ")
+
 		# Try logging in as customer
 		try:
 			cursor.execute("SELECT * FROM customers WHERE UPPER(cid) = UPPER(:id)", { "id":id })
@@ -166,17 +167,35 @@ def registerScreen():
 
 	while True:
 		print("----- Register -----")
-		id = str(input("Provide ID: ")).strip()
-		name = str(input("Provide name: "))
-		#FIXME: password must be not visible at time of typing
-		pwd = str(input("Provide password: "))
 		
-		if len(pwd) < 1 or len(name) < 1 or len(id) < 1:
-			input("Please input appropriate fields...")
+		# Get proper id 
+		id = input("Provide ID: ")
+		if len(id) < 1 or len(id) > 4:
+			print("ID must be between 1 to 4 characters")
 			continue
+
+		# Get proper name
+		name = str(input("Provide name: "))
+		if len(name) < 1:
+			print("Please provide a name")
+			continue
+		# Since assignment does not specify more on the form of name
+		# I won't check additional constraints like space at start or something. 
+
+		# Get proper password
+		pwd = str(getpass("Provide password: "))
+		if len(pwd) < 1:
+			input("Please provide a password")
+			continue
+		# Again, assignment does not specify on form of password 
+		# I won't check stuff like must be a secure password, must have mix of blah blah
+
+
+		# ---- Check if id is unique... ----
 
 		# First it cannot have the same id as an editor's
 		try:
+			# Check if an editor with the given register id exists
 			cursor.execute("SELECT 1 FROM editors WHERE UPPER(eid) = UPPER(:id) LIMIT 1", { "id": id } )
 			res = cursor.fetchone()
 		except sqlite3.Error as e:
@@ -185,7 +204,7 @@ def registerScreen():
 			print()
 			return
 
-		# If id is already taken by an editor
+		# If id is already taken by an editor then try again
 		if res != None:
 			print("Invalid ID. Try again?")
 			resp = getUserYesOrNo()
@@ -194,7 +213,7 @@ def registerScreen():
 			else:
 				break
 
-		# Now check if id already exists as customer id
+		# Now check if id already exists as customer id 
 		try:
 			cursor.execute("SELECT 1 FROM customers WHERE UPPER(cid) = UPPER(:id) LIMIT 1", { "id": id} )
 			res = cursor.fetchone()
