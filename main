@@ -1,4 +1,3 @@
-#! bin/bash
 
 # Call chmod +x main to execute ./main
 python3 main.py ./test.db ./prj-tables.sql

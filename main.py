@@ -186,7 +186,8 @@ class StartMenu(Menu):
 			elif row != None and row["pwd"] == pwd:
 
 				print("Welcome " + row["name"])
-				customerMenu(self._db, id, row["name"])
+				newMenu = CustomerMenu(self._db, id, row["name"])
+				newMenu.start()
 				break
 
 			# Try logging in as editor
@@ -210,7 +211,8 @@ class StartMenu(Menu):
 			else:
 
 				print("Welcome editor " + id)
-				editorMenu(self._db, id)
+				newMenu = EditorMenu(self._db, id)
+				newMenu.start()
 				break
 
 
