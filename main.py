@@ -609,7 +609,7 @@ def main():
 	if len(sys.argv) < 3:
 		print("Insufficient number of arguments. Please provide database path name and schema path name")
 		return
-	else if len(sys.argv) > 3:
+	elif len(sys.argv) > 3:
 		print("Too many arguments")
 		return
 
