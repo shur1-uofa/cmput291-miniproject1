@@ -497,11 +497,11 @@ class EditorMenu(Menu):
 			raise Exception("report() function parameter invalid. It should be 'monthly', 'annual', or 'alltime'.")
 			return
 
-	    cursor.execute("""WITH watched AS (SELECT w.sid, w.cid, w.mid FROM watch w, movies m WHERE w.mid = m.mid AND (w.duration + w.duration) >= m.runtime),
-                        watchedwithrange AS (SELECT DISTINCT w.mid, w.cid FROM watched w, sessions s WHERE w.sid = s.sid AND s.sdate >= :date),
-                        pairings AS (SELECT w1.mid AS mid1, w2.mid as mid2, COUNT(*) AS count FROM watchedwithrange w1, watchedwithrange w2 WHERE w1.cid = w2.cid AND w1.mid != w2.mid GROUP BY w1.mid, w2.mid ORDER BY count DESC),
-                        pairingswithindic AS ( SELECT mid1, mid2, count, (1) as indic FROM pairings WHERE EXISTS( SELECT * FROM recommendations WHERE pairings.mid1 = watched AND pairings.mid2 = recommended))
-                        SELECT mid1, mid2, count, indic FROM pairings left outer join pairingswithindic using (mid1,mid2,count);""", datestring);
+		cursor.execute("""WITH watched AS (SELECT w.sid, w.cid, w.mid FROM watch w, movies m WHERE w.mid = m.mid AND (w.duration + w.duration) >= m.runtime),
+						watchedwithrange AS (SELECT DISTINCT w.mid, w.cid FROM watched w, sessions s WHERE w.sid = s.sid AND s.sdate >= :date),
+						pairings AS (SELECT w1.mid AS mid1, w2.mid as mid2, COUNT(*) AS count FROM watchedwithrange w1, watchedwithrange w2 WHERE w1.cid = w2.cid AND w1.mid != w2.mid GROUP BY w1.mid, w2.mid ORDER BY count DESC),
+						pairingswithindic AS ( SELECT mid1, mid2, count, (1) as indic FROM pairings WHERE EXISTS( SELECT * FROM recommendations WHERE pairings.mid1 = watched AND pairings.mid2 = recommended))
+						SELECT mid1, mid2, count, indic FROM pairings left outer join pairingswithindic using (mid1,mid2,count);""", datestring);
 		p = cursor.fetchall()
 		conn.rollback()
 		return p
