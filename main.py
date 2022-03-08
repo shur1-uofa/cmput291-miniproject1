@@ -330,35 +330,35 @@ def report(timerange):
     return p
     conn.rollback()
 
-#Prompts a user for movie keywords and 
+#Prompts a user for movie keywords and
 #returns a list of all movies ordered by number of matches
-#Output_format: list of tuples of the form (mid, title, year, runtime, numberofmatches)
+#Output_format: list of tuples of the form (mid, title, year, numberofmatches)
 def search4movies():
-	#User Searches for movie
-	movie_input = str(input("Search for a movie: "))
+        #User Searches for movie
+        movie_input = str(input("Search for a movie: "))
 
-	#Identify keywords of user input
-	split_input = movie_input.split()
+        #Identify keywords of user input
+        split_input = movie_input.split()
 
-	#Add a 'number of matches' attribute to movies
-	cursor.executescript("""CREATE TEMP TABLE temp AS SELECT * FROM movies;
-			    ALTER TABLE temp ADD num int DEFAULT 0;
-			    """)
+        #Make runtime be a temporary 'number of matches' column
+        cursor.execute("""UPDATE movies
+                        SET runtime = 0;
+                            """)
 
-	#increment the 'number of matches' for each row
-	for x in split_input:
-	    cursor.execute("""UPDATE temp
-			SET num = num + 1
-			WHERE title LIKE '%'||:x||'%'""",{'x' : x})
+        #increment the 'number of matches' for each row
+        for x in split_input:
+            cursor.execute("""UPDATE movies
+                        SET runtime = runtime + 1
+                        WHERE title LIKE '%'||:x||'%'""",{'x' : x})
 
-	#select and order results
-	cursor.execute("""SELECT *
-		    FROM temp
-		    WHERE num > 0
-		    ORDER BY num DESC;""")
-	rows = cursor.fetchall()
-	conn.rollback()
-	return rows
+        #select and order results
+        cursor.execute("""SELECT *
+                    FROM movies
+                    WHERE runtime > 0
+                    ORDER BY runtime DESC;""")
+        rows = cursor.fetchall()
+        conn.rollback()
+        return rows
       
 #Prompts for movie details and cast members and adds them to the database if granted by the user
 def addaMovie():
