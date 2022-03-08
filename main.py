@@ -1,6 +1,7 @@
 import sqlite3
 import os
 import time
+import datetime
 
 conn = None
 cursor = None
@@ -268,6 +269,75 @@ def customerMenu():
 		else:
 			input("Invalid selection. Try again...")
 			continue
+
+# FIXME: temp variables. unfortunately.
+mid = 110
+sid = 1
+cid = "c500"
+movieStart = datetime.datetime.now()
+
+def endWatchMovie():
+	# The clarifcation states that only one movie is watched at a time.
+	# So we will not include the functionality 
+	# "if multiple movie is being watched, you have the choice to select one"
+	# Because it doesn't make sense. 
+	
+	# Check if a movie is being currently watched
+	if mid == None:
+		# If no movies being watched then return
+		print("No movie is being watched.")
+		return
+	
+	# Check if last watched movie has finished watching
+	diffTime = curTime - datetime.datetime.now()
+	diffMins = diffTime.total_seconds() / 60
+
+	# Update the watch table row if movie that is being watched has been watched
+	# longer than its runtime. 
+	cursor.execute('''
+			UPDATE watch 
+			SET watch.duration = m.runtime 
+			FROM movies m 
+			WHERE watch.mid = :mid AND watch.sid = :sid AND watch.cid = :id 
+			AND watch.mid = m.mid 
+			AND m.runtime <= :watchtime
+			''', { "mid":mid, "sid":sid, "cid":id, "watchtime": diffMins })	
+	
+	# If a row was updated then the customer is currently not watching a movie
+	if cursor.rowcount > 0:
+		print("No movie is being watched.")
+		mid = None
+		conn.commit()
+		return
+	
+	# Now at this point, the customer is watching a movie that isn't finished.
+	cursor.execute('''
+			SELECT *
+			FROM movies 
+			WHERE mid = :mid
+			''', {"mid":mid});
+	row = cursor.fetchone()
+
+	print("You are currently watching " + row["title"])
+	print("End the movie?")
+	resp = getUserYesOrNo()
+	if not resp:
+		print("Returning")
+		return
+	
+	# End watching movie
+	cursor.execute('''
+			UPDATE watch 
+			SET watch.duration = :watchtime 
+			WHERE mid = :mid AND sid = :sid AND cid = :id
+			''', {"mid":mid, "sid":sid, "cid":id, "watchtime":diffMins})
+	mid = None;
+	conn.commit()
+	return
+
+
+
+
 
 
 def editorMenu():
