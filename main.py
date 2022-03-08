@@ -1,6 +1,7 @@
 import sqlite3
 import os
 import sys
+import time
 import datetime
 from getpass import getpass
 
@@ -300,12 +301,13 @@ class StartMenu(Menu):
 				print()
 				return
 
-			user_info["id"] = id
-			user_info["name"] = name
+			self._id = id
+			self._name = name
 
 			print("Successfully registered.")
 			print()
-			customerMenu()
+			newMenu = customerMenu()
+			newMenu.start()
 			break
 
 		return
@@ -417,7 +419,7 @@ class CustomerMenu(Menu):
 		if self._sidStart == None:
 			session_date = datetime.date.today()
 			session_start_time = time.time()
-			cursor.execute("""INSERT INTO sessions VALUES (?,?,?,NULL);""", (new_id, user_info["id"], session_date))
+			cursor.execute("""INSERT INTO sessions VALUES (?,?,?,NULL);""", (new_id, self._id, session_date))
 			self._sidStart = session_start_time
 			print("Session started successfully")
 			conn.commit()
