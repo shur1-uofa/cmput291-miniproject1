@@ -380,11 +380,11 @@ class CustomerMenu(Menu):
 			new_id = 1
 		else:
 			new_id = int(max_id) + 1
-		if self.sidStart == None:
+		if self._sidStart == None:
 			session_date = datetime.date.today()
 			session_start_time = time.time()
 			cursor.execute("""INSERT INTO sessions VALUES (?,?,?,NULL);""", (new_id, user_info["id"], session_date))
-			self.sidStart = session_start_time
+			self._sidStart = session_start_time
 			print("Session started successfully")
 			conn.commit()
 		else:
