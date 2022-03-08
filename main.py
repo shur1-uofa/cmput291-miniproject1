@@ -306,7 +306,7 @@ class StartMenu(Menu):
 
 			print("Successfully registered.")
 			print()
-			newMenu = customerMenu()
+			newMenu = CustomerMenu()
 			newMenu.start()
 			break
 
