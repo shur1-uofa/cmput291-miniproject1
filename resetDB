@@ -1,0 +1,8 @@
+#! /bin/bash
+
+# chmod +x thisfile 
+rm test.db
+sqlite3 test.db < prj-tables.sql 
+sqlite3 test.db < test-data.sql
+echo "Done"
+

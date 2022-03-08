@@ -1,6 +1,6 @@
 import sqlite3
 import os
-import time
+import sys
 import datetime
 from getpass import getpass
 
@@ -177,7 +177,7 @@ class StartMenu(Menu):
 			# Case : customer with wrong password
 			if row != None and row["pwd"] != pwd:
 				print("Invalid credentials. Try again?")
-				resp = getUserYesOrNo()
+				resp = self.getUserYesOrNo()
 				if resp:
 					continue
 				else:
@@ -201,7 +201,7 @@ class StartMenu(Menu):
 			# Case : invalid id or editor with wrong password
 			if row == None or row["pwd"] != pwd:
 				print("Invalid credentials. Try again?")
-				resp = getUserYesOrNo()
+				resp = self.getUserYesOrNo()
 				if resp:
 					continue
 				else:
@@ -605,9 +605,21 @@ class EditorMenu(Menu):
 
 	
 def main():
-	# FIXME: temporary. Make it accept command line args
-	DBPATH = "./test.db"
-	SCHEMAPATH = "./prj-tables.txt"
+	# Get commandline arguments
+	if len(sys.argv) < 3:
+		print("Insufficient number of arguments. Please provide database path name and schema path name")
+		return
+	else if len(sys.argv) > 3:
+		print("Too many arguments")
+		return
+
+	DBPATH = sys.argv[2]
+	SCHEMAPATH = sys.argv[3]
+
+	if not os.path.exists(DBPATH) or not os.path.exists(SCHEMAPATH):
+		print("Please give a valid file")
+		return
+
 
 	# Create database object and open 
 	db = Database()
