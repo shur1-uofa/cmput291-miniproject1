@@ -255,6 +255,7 @@ def customerMenu():
 		elif resp == "3":
 			# Do end movie stuff
 			print()
+			endWatchMovie()
 		elif resp == "4":
 			# Do end session stuff
 			print()
@@ -271,67 +272,59 @@ def customerMenu():
 			continue
 
 # FIXME: temp variables. unfortunately.
-mid = 110
-sid = 1
-cid = "c500"
-movieStart = datetime.datetime.now()
+#mid = 110
+#sid = 1
+#cid = "c500"
+#movieStart = datetime.datetime.now()
 
 def endWatchMovie():
 	# The clarifcation states that only one movie is watched at a time.
 	# So we will not include the functionality 
 	# "if multiple movie is being watched, you have the choice to select one"
 	# Because it doesn't make sense. 
-	
+	#FIXME: remove global variables
+	global mid, sid, cid, movieStart
+
 	# Check if a movie is being currently watched
 	if mid == None:
 		# If no movies being watched then return
 		print("No movie is being watched.")
 		return
 	
-	# Check if last watched movie has finished watching
-	diffTime = curTime - datetime.datetime.now()
-	diffMins = diffTime.total_seconds() / 60
+	# Find minutes watched
+	diffTime = datetime.datetime.now() - movieStart
+	watchMins = diffTime.total_seconds() // 60
 
-	# Update the watch table row if movie that is being watched has been watched
-	# longer than its runtime. 
+	# Get runtime of movie (and also title)
 	cursor.execute('''
-			UPDATE watch 
-			SET watch.duration = m.runtime 
-			FROM movies m 
-			WHERE watch.mid = :mid AND watch.sid = :sid AND watch.cid = :id 
-			AND watch.mid = m.mid 
-			AND m.runtime <= :watchtime
-			''', { "mid":mid, "sid":sid, "cid":id, "watchtime": diffMins })	
-	
-	# If a row was updated then the customer is currently not watching a movie
-	if cursor.rowcount > 0:
-		print("No movie is being watched.")
-		mid = None
-		conn.commit()
-		return
-	
-	# Now at this point, the customer is watching a movie that isn't finished.
-	cursor.execute('''
-			SELECT *
-			FROM movies 
+			SELECT title, runtime 
+			FROM movies
 			WHERE mid = :mid
-			''', {"mid":mid});
+			''', {"mid":mid})
 	row = cursor.fetchone()
-
-	print("You are currently watching " + row["title"])
-	print("End the movie?")
-	resp = getUserYesOrNo()
-	if not resp:
-		print("Returning")
-		return
+	runtime = row["runtime"]
+	mtitle = row["title"]
 	
+	# Check if current movie has finished watching
+	if watchMins > runtime:
+		print("No movie is being watched")
+		watchMins = runtime
+	else:
+		print("You are currently watching " + mtitle)
+		print("Do you want to stop watching it?")
+		resp = getUserYesOrNo()
+		# If reply is no then return	
+		if not resp:
+			print("Going back to main menu")
+			return
+
 	# End watching movie
 	cursor.execute('''
 			UPDATE watch 
-			SET watch.duration = :watchtime 
-			WHERE mid = :mid AND sid = :sid AND cid = :id
-			''', {"mid":mid, "sid":sid, "cid":id, "watchtime":diffMins})
-	mid = None;
+			SET duration = :watchtime 
+			WHERE mid = :mid AND sid = :sid AND cid = :cid
+			''', {"mid":mid, "sid":sid, "cid":cid, "watchtime":watchMins})
+	mid = None
 	conn.commit()
 	return
 
