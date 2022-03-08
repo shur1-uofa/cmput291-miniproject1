@@ -301,8 +301,9 @@ def editorMenu():
 
 #Returns a list of movie pairings and their respective number of customers
 #timerange = 'monthly','annual',or 'alltime'
-#Output_format: List of tuples of the form (mid, mid,number of customers)
+#Output_format: List of tuples of the form (mid, mid,number of customers, indicator = "0"(not in recommendations) or "1"(in recommendations))
 def report(timerange):
+
     # make the watch table only have 'watched' movies
     cursor.execute("""CREATE TEMP TABLE watched AS SELECT w.sid, w.cid, w.mid FROM watch w, movies m WHERE w.mid = m.mid AND (w.duration + w.duration) >= m.runtime;""")
 
@@ -318,14 +319,14 @@ def report(timerange):
         return
 
     # for each customer, do the cartesian product of the movies they've watched and group them
-    cursor.execute("""SELECT w1.mid AS mid1, w2.mid as mid2, COUNT(*) AS count FROM watchedwithrange w1, watchedwithrange w2 WHERE w1.cid = w2.cid AND w1.mid != w2.mid GROUP BY w1.mid, w2.mid ORDER BY count DESC;""")
-
-    # get rid of redundancies
+    cursor.execute("""CREATE TEMP TABLE pairings AS SELECT w1.mid AS mid1, w2.mid as mid2, COUNT(*) AS count FROM watchedwithrange w1, watchedwithrange w2 WHERE w1.cid = w2.cid AND w1.mid != w2.mid GROUP BY w1.mid, w2.mid ORDER BY count DESC;""")
+    
+    #set up indicator column for each tuple
+    cursor.execute("""ALTER TABLE pairings ADD indicator DEFAULT 0;""")
+    cursor.execute("""UPDATE pairings SET indicator = 1 WHERE EXISTS( SELECT * FROM recommendations WHERE pairings.mid1 = watched AND pairings.mid2 = recommended);""")
+    
+    cursor.execute("""SELECT * FROM pairings;""")
     p = cursor.fetchall()
-    for x in p:
-        for y in p:
-            if y[0] == x[1] and x[0] == y[1]:
-                p.remove(y)
     return p
     conn.rollback()
 
