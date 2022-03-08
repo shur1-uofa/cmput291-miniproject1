@@ -349,7 +349,9 @@ def search4movies():
         for x in split_input:
             cursor.execute("""UPDATE movies
                         SET runtime = runtime + 1
-                        WHERE title LIKE '%'||:x||'%'""",{'x' : x})
+                        WHERE title LIKE '%'||:x||'%'
+                        OR EXISTS ( SELECT * FROM casts c, moviePeople p WHERE movies.mid = c.mid AND p.pid = c.pid AND p.name LIKE '%'||:x||'%')
+                        OR EXISTS ( SELECT * FROM casts c WHERE movies.mid = c.mid AND c.role LIKE '%'||:x||'%');""",{'x' : x})
 
         #select and order results
         cursor.execute("""SELECT *
