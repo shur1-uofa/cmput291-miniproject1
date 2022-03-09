@@ -501,7 +501,7 @@ class CustomerMenu(Menu):
 			new_id = int(max_id) + 1
 		if self._sidStart == None:
 			session_date = datetime.date.today()
-			session_start_time = datetime.datetime()
+			session_start_time = datetime.datetime.now()
 			cursor.execute("""INSERT INTO sessions VALUES (?,?,?,NULL);""", (new_id, self._id, session_date))
 			self._sidStart = session_start_time
 			print("Session started successfully")
