@@ -423,22 +423,22 @@ class CustomerMenu(Menu):
 			print("Exit? - "+ str(x+3))
 				
 			resp = str(input("\nYour selection: ")).strip()
-				
+			
 			# Response is see more matches
 			if resp == str(x+1):
 				if movieIndex + 5 < len(movieResults):
 					movieIndex += 5
 				else:
 					input("No more matches. Enter anything to continue")
-			# Response is exit
-			elif resp == str(x+3):
-				break
 			# Response is previous matches
 			elif resp == str(x+2):
 				if movieIndex - 5 >= 0:
 					movieIndex -= 5
 				else:
 					input("You've reached the starting page. Enter anything to continue")
+			# Response is exit
+			elif resp == str(x+3):
+				break
 			# Movie is selected
 			elif resp >= '1' and resp <= str(x):
 				#get movie details
