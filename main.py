@@ -429,7 +429,7 @@ class CustomerMenu(Menu):
 				if movieIndex + 5 < len(movieResults):
 					movieIndex += 5
 				else:
-				 input("No more matches. Enter anything to continue")
+					input("No more matches. Enter anything to continue")
 			# Response is exit
 			elif resp == str(x+3):
 				break
