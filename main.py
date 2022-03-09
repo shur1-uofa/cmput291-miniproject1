@@ -372,6 +372,9 @@ class CustomerMenu(Menu):
 		print("---Searching for a movie---")
 		user_input = str(input("Search for a movie: "))
 		movieResults = self.getSearchResults(user_input)
+		if len(movieResults) == 0:
+			input("No matches. Enter anything to continue ")
+			return
 		movieIndex = 0
 		
 		while True:
