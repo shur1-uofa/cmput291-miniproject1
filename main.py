@@ -606,11 +606,15 @@ class CustomerMenu(Menu):
 		sessionTime = datetime.datetime.now() - self._sidStart
 		sessionMins = sessionTime.total_seconds() // 60
 
+		print(self._sidStart)
+		print(sessionTime)
+		print(sessionMins)
+
 		# End session
 		cursor.execute('''
 				UPDATE sessions 
 				SET duration = :sessiontime 
-				WHERE sid = :sid AND cid = UPPER(:cid)
+				WHERE sid = :sid AND UPPER(cid) = UPPER(:cid)
 				''', {"sid":self._sid, "cid":self._id, "sessiontime":sessionMins})
 		# Update object private variables
 		self._sid = None
