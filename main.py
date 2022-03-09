@@ -392,7 +392,7 @@ class CustomerMenu(Menu):
 				try:
 					cursor.execute("""SELECT year, runtime FROM movies WHERE mid = :mid2;""",{'mid2' : movieResults[movieIndex+x][0]})
 					movie_details = cursor.fetchone()
-					print("    " + str(movieResults[movieIndex+x][1]) + " ( "+ str(movie_details[0])+" ) "+" ( "+ str(movie_details[1])+" minutes ) - " + str(x+1))
+					print("    " + str(movieResults[movieIndex+x][1]) + " ("+ str(movie_details[0])+") "+" ("+ str(movie_details[1])+" minutes) - " + str(x+1))
 				except IndexError:
 					break
 				x += 1
