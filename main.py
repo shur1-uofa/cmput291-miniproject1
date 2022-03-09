@@ -1,7 +1,6 @@
 import sqlite3
 import os
 import sys
-import time
 import datetime
 from getpass import getpass
 
@@ -418,7 +417,7 @@ class CustomerMenu(Menu):
 			new_id = int(max_id) + 1
 		if self._sidStart == None:
 			session_date = datetime.date.today()
-			session_start_time = time.time()
+			session_start_time = datetime.datetime()
 			cursor.execute("""INSERT INTO sessions VALUES (?,?,?,NULL);""", (new_id, self._id, session_date))
 			self._sidStart = session_start_time
 			print("Session started successfully")
@@ -426,7 +425,7 @@ class CustomerMenu(Menu):
 		else:
 			print("There is already a session running")
 	
-	# Prompts a user to end a session
+	# Prompts a user to end a session and any movies being watched in the session
 	def endSession(self):
 		# Get cursor and conn objects
 		conn = self._db.getConn()
@@ -438,9 +437,52 @@ class CustomerMenu(Menu):
 			print("No session is running currently")
 			return
 
+		# Check if a movie is being currently watched
+		if self._mid == None:
+			# If no movies being watched then return
+			print("No movie is being watched.")
+			return
+		
+		# Find minutes watched
+		watchTime = datetime.datetime.now() - self._midStart
+		watchMins = watchTime.total_seconds() // 60
+
+		# Get runtime of movie (and also title)
+		cursor.execute('''
+				SELECT title, runtime 
+				FROM movies
+				WHERE mid = :mid
+				''', {"mid": self._mid})
+		row = cursor.fetchone()
+		runtime = row["runtime"]
+		mtitle = row["title"]
+		
+		# Check if current movie has finished watching
+		if watchMins > runtime:
+			print("No movie is being watched in this session")
+			watchMins = runtime
+		else:
+			print("You are currently watching " + mtitle)
+			print("Do you want to stop watching it and end the session?")
+			resp = self.getUserYesOrNo()
+			# If reply is no then return    
+			if not resp:
+				print("Going back to main menu")
+				return
+
+		# End watching movie
+		cursor.execute('''
+				UPDATE watch 
+				SET duration = :watchtime 
+				WHERE mid = :mid AND sid = :sid AND cid = :cid
+				''', {"mid":self._mid, "sid":self._sid, "cid":self._id, "watchtime":watchMins})
+		self._mid = None
+		self._midStart = None
+		conn.commit()
+
 		# Find minutes of the session
-		diffTime = datetime.datetime.now() - self._sidStart
-		sessionMins = diffTime.total_seconds() // 60
+		sessionTime = datetime.datetime.now() - self._sidStart
+		sessionMins = sessionTime.total_seconds() // 60
 
 		# End session
 		cursor.execute('''
@@ -452,7 +494,7 @@ class CustomerMenu(Menu):
 		self._sidStart = None
 		conn.commit()
 		return
-
+	
 	# The end watch movie functionality
 	def endWatchMovie(self):
 		# Get cursor and conn objects
