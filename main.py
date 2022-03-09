@@ -440,7 +440,8 @@ class CustomerMenu(Menu):
 						
 					#response is watch the movie
 					if resp2 == str(y):
-						print("watching movie...") # put startWatchMovie() function here
+						self.startWatchMovie(movieResults[movieIndex+int(resp)-1] [0])
+						input("You have started watching "+ movieResults[movieIndex+int(resp)-1] [1] + ". Enter anything to continue ") 
 					# response is exit
 					elif resp2 == str(y+1):
 						break
