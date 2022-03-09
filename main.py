@@ -571,6 +571,7 @@ class EditorMenu(Menu):
 			elif resp == "2":
 				# Do update recommends stuff
 				print()
+				self.updateRecommends()
 			elif resp == "3":
 				print("Logging out")
 				return
@@ -581,9 +582,163 @@ class EditorMenu(Menu):
 				input("Invalid selection. Try again...")
 				continue
 
+
+	
+	def updateRecommends(self):
+		# Get type of report
+		print("Select your date range")
+		print("Monthly - 1")
+		print("Annual - 2")
+		print("All-Time - 3")
+		resp = input("Type in your selection: ").strip()
+
+		# Get appropriate data
+		rept = None
+		if resp == "1":
+			rept = self.report("monthly")
+		elif resp == "2":
+			rept = self.report("annual")
+		elif resp == "3":
+			rept = self.report("alltime")
+		else:
+			print("Invalid response")
+			return
+
+		# If there is no report then return
+		if len(rept) == 0:
+			print("Empty report")
+			return
+
+		# Get cursor and conn objects
+		conn = self._db.getConn()
+		cursor = self._db.getCursor()
+
+		# Print out the data along with indices
+		index = 1
+		for row in rept:
+			rowString = str(index) + ". "
+			rowString += str(row["count"]) + " Customers watched mid " + str(row["mid1"]) + " "
+			rowString += "also watched mid " + str(row["mid2"])
+			if row["indic"] == 1:
+				rowString += " IN recommendations list score "
+				# Get score
+				cursor.execute("""
+						SELECT score 
+						FROM recommendations 
+						WHERE watched = :wid AND recommended = :rid
+						""", { "wid":row["mid1"], "rid":row["mid2"]})
+				score = cursor.fetchone()["score"]
+				rowString += str(score)
+			elif row["indic"] == None:
+				rowString += " NOT in recommendations list"
+			else:
+				print("Error. Indicator is unexpected value")
+				print(row["indic"])
+
+			print(rowString)
+			index += 1
+	
+		while True:
+			# Ask for the user to choose an index
+			print("Select a pair by its index")
+			try:
+				selected = int(input("Type in the index here ").strip())
+			except ValueError:
+				print("Please give an integer")
+				continue
+
+			# If index given is invalid then say invalid
+			if selected < 1 or selected >= index:
+				print("Invalid index. Try again?")
+				resp = self.getUserYesOrNo()
+				if not resp:
+					print("Leaving")
+					return
+				continue
+			# Get data of the selected row
+			row = rept[selected-1]
+			
+			# Ask the user what to do with it
+			print("What would you like to do with it?")
+			# Case : not in recommendation list
+			if row["indic"] == None:
+				while True:
+					print("Add to recommendations list - 1")
+					print("Back - 2")
+					resp = input("Type in your selection: ")
+					if resp == "1":
+					
+						# Get score
+						print("What score will you give it? ")
+						score = ""
+						while True:
+							try:
+								score = float(input("Input score here: ").strip())
+								break
+							except ValueError:
+								print("Please give an float value")
+								continue
+	
+						# Insert into database
+						cursor.execute("INSERT INTO recommendations VALUES(?, ?, ?)", 
+								(row["mid1"], row["mid2"], score))
+						conn.commit()
+						print("Added to recommendation list")
+						return
+					elif resp == "2":
+						break
+					else:
+						input("Please type a valid selection...")
+						continue
+
+			# Case : in recommendations list
+			elif row["indic"] == 1:
+				while True:
+					print("Update score in recommendations list - 1")
+					print("Remove from recommendations list - 2")
+					print("Back - 3")
+					resp = input("Type in your selection: ")
+
+					if resp == "1":	
+						# Get the score
+						print("To what score will you update it to?")
+						score = ""
+						while True:
+							try:
+								score = float(input("Input score here: ").strip())
+								break
+							except ValueError:
+								print("Please given a float value")
+								continue
+						# Now update it
+						cursor.execute("""
+								UPDATE recommendations SET score = :score 
+								WHERE watched = :wid AND recommended = :rid
+								""", {"score":score, "wid": row["mid1"], "rid": row["mid2"]})
+						conn.commit()
+						print("Updated the score")
+						return
+
+					elif resp == "2":
+						# Delete from recommendations
+						cursor.execute("""
+								DELETE FROM recommendations
+								WHERE watched = :wid AND recommended = :rid
+								""", {"wid": row["mid1"], "rid": row["mid2"]})
+						conn.commit()
+						print("Removed from recommendations")
+						return
+					elif resp == "3":
+						break
+					else:
+						input("Please type a valid selection...")
+						continue
+
+			
+
 	#Returns a list of movie pairings and their respective number of customers
 	#timerange = 'monthly','annual',or 'alltime'
-	#Output_format: List of tuples of the form (mid, mid,number of customers, indicator = "0"(not in recommendations) or "1"(in recommendations))
+	#Output_format: List of tuples of the form (mid, mid,number of customers, indicator = "None"(not in recommendations) or "1"(in recommendations))
 	def report(self, timerange):
 
 		# Get cursor and conn objects
@@ -600,11 +755,32 @@ class EditorMenu(Menu):
 			raise Exception("report() function parameter invalid. It should be 'monthly', 'annual', or 'alltime'.")
 			return
 
-		cursor.execute("""WITH watched AS (SELECT w.sid, w.cid, w.mid FROM watch w, movies m WHERE w.mid = m.mid AND (w.duration + w.duration) >= m.runtime),
-						watchedwithrange AS (SELECT DISTINCT w.mid, w.cid FROM watched w, sessions s WHERE w.sid = s.sid AND s.sdate >= :date),
-						pairings AS (SELECT w1.mid AS mid1, w2.mid as mid2, COUNT(*) AS count FROM watchedwithrange w1, watchedwithrange w2 WHERE w1.cid = w2.cid AND w1.mid != w2.mid GROUP BY w1.mid, w2.mid ORDER BY count DESC),
-						pairingswithindic AS ( SELECT mid1, mid2, count, (1) as indic FROM pairings WHERE EXISTS( SELECT * FROM recommendations WHERE pairings.mid1 = watched AND pairings.mid2 = recommended))
-						SELECT mid1, mid2, count, indic FROM pairings left outer join pairingswithindic using (mid1,mid2,count);""", datestring);
+		cursor.execute("""
+				WITH watched AS 
+					(SELECT w.sid, w.cid, w.mid 
+					FROM watch w, movies m 
+					WHERE w.mid = m.mid AND (w.duration + w.duration) >= m.runtime),
+				watchedwithrange AS 
+					(SELECT DISTINCT w.mid, w.cid 
+					 FROM watched w, sessions s 
+					 WHERE w.sid = s.sid AND s.sdate >= :date),
+				pairings AS 
+					(SELECT w1.mid AS mid1, w2.mid as mid2, COUNT(*) AS count 
+					 FROM watchedwithrange w1, watchedwithrange w2 
+					 WHERE w1.cid = w2.cid AND w1.mid != w2.mid 
+					 GROUP BY w1.mid, w2.mid 
+					 ORDER BY count DESC),
+				pairingswithindic AS 
+					( SELECT mid1, mid2, count, (1) as indic 
+					  FROM pairings 
+					  WHERE EXISTS( 
+						  SELECT * FROM recommendations 
+						  WHERE pairings.mid1 = watched AND pairings.mid2 = recommended
+						)
+					)
+				SELECT mid1, mid2, count, indic 
+				FROM pairings left outer join pairingswithindic 
+				using (mid1,mid2,count);""", datestring);
 		p = cursor.fetchall()
 		conn.rollback()
 		return p
