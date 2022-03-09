@@ -606,10 +606,6 @@ class CustomerMenu(Menu):
 		sessionTime = datetime.datetime.now() - self._sidStart
 		sessionMins = sessionTime.total_seconds() // 60
 
-		print(self._sidStart)
-		print(sessionTime)
-		print(sessionMins)
-
 		# End session
 		cursor.execute('''
 				UPDATE sessions 
