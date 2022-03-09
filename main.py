@@ -710,7 +710,8 @@ class EditorMenu(Menu):
 			# TODO: fill out functionalities
 			if resp == "1":
 				# Do add movie stuff
-				print("")
+				print("--- Add a movie ---")
+				self.addaMovie()
 			elif resp == "2":
 				# Do update recommends stuff
 				print()
