@@ -463,8 +463,15 @@ class CustomerMenu(Menu):
 						
 					#response is watch the movie
 					if resp2 == str(y):
-						self.startWatchMovie(movieResults[movieIndex+int(resp)-1] [0])
-						input("You have started watching "+ movieResults[movieIndex+int(resp)-1] [1] + ". Enter anything to continue ") 
+						if self._sid == None:
+							input("You cannot watch this movie because you have not started a session.")
+						else:
+							if self._mid != None:
+								cursor.execute("""SELECT title FROM movies WHERE mid = :mid2;""", {'mid2' : self._mid})
+								p = cursor.fetchone()
+								print("You have stopped watching " + p[0]+" and ", end ="")
+							self.startWatchMovie(movieResults[movieIndex+int(resp)-1] [0])
+							input("You have started watching "+ movieResults[movieIndex+int(resp)-1] [1] + ". Enter anything to continue ")  
 					# response is exit
 					elif resp2 == str(y+1):
 						break
