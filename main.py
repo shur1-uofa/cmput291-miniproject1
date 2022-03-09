@@ -937,7 +937,7 @@ class EditorMenu(Menu):
 
 		while True:
 			try:
-				movie_id = int(input("Enter the movie_id: "))
+				movie_id = int(input("Enter the movie id: "))
 				title = str(input("Enter the title: " ))
 				year = int(input("Enter the year: "))
 				runtime = int(input("Enter the runtime: " ))
@@ -953,7 +953,7 @@ class EditorMenu(Menu):
 		while True:
 			while True:
 				try:
-					cast_id = int(input("Enter cast id (integer): "))
+					cast_id = int(input("Enter cast id: "))
 				except ValueError:
 					print('Invalid Input.Try again.')
 					continue
@@ -965,7 +965,7 @@ class EditorMenu(Menu):
 				print("The person does not exist in the database.")
 				try:
 					name = str(input("Enter name of person: " ))
-					birthyear = int(input("Enter birthyear (integer): " ))
+					birthyear = int(input("Enter birthyear: " ))
 				except ValueError:
 					print("Invalid Input. Try again.")
 					continue
