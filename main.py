@@ -1071,8 +1071,8 @@ def main():
 	DBPATH = sys.argv[1]
 	SCHEMAPATH = sys.argv[2]
 
-	if not os.path.exists(DBPATH) or not os.path.exists(SCHEMAPATH):
-		print("Please give a valid file")
+	if not os.path.exists(SCHEMAPATH):
+		print("Please give a valid file for schema")
 		return
 
 
