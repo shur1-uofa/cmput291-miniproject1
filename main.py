@@ -445,10 +445,13 @@ class CustomerMenu(Menu):
 				yrAndRt = cursor.fetchone()
 				cursor.execute("""SELECT c.pid, p.name FROM casts c, moviePeople p WHERE c.mid = :mid2 AND c.pid = p.pid;""", {'mid2' : movieResults[movieIndex+int(resp)-1] [0]})
 				castsIdAndName = cursor.fetchall()
+				cursor.execute("""WITH customerd AS (SELECT DISTINCT c.cid FROM customers c, watch w WHERE w.cid = c.cid AND w.mid = :mid2) SELECT COUNT(*) FROM customerd;""", {'mid2': movieResults[movieIndex+int(resp)-1] [0]})
+				views = cursor.fetchone()
 					
 				while True:
 					#print movie details and cast member choices
 					print("---"+ str(movieResults[movieIndex+int(resp)-1] [1])+"---")
+					print("Views: "+ str(views[0]))
 					print("Year of release: "+ str(yrAndRt[0]))
 					print("Runtime: " + str(yrAndRt[1]) + " minutes")
 					print("Cast members: \n")
