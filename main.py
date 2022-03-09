@@ -357,6 +357,7 @@ class CustomerMenu(Menu):
 			elif resp == "4":
 				# Do end session stuff
 				print()
+				self.endSession()
 			elif resp == "5":
 				print("Logging out")
 				return
