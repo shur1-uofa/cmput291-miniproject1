@@ -162,7 +162,7 @@ class StartMenu(Menu):
 
 		while True:
 			print("----- Login -----")
-			id = input("ID: ").upper()
+			id = input("ID: ")
 			pwd = getpass("Password: ") 
 
 			# Try logging in as customer
