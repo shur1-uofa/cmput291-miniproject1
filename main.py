@@ -425,7 +425,33 @@ class CustomerMenu(Menu):
 			conn.commit()
 		else:
 			print("There is already a session running")
+	
+	# Prompts a user to end a session
+	def endSession(self):
+		# Get cursor and conn objects
+		conn = self._db.getConn()
+		cursor = self._db.getCursor()
 
+		# Check if a session is not running
+		if self._sid == None:
+			# If no session is running currently then return
+			print("No session is running currently")
+			return
+
+		# Find minutes of the session
+		diffTime = datetime.datetime.now() - self._sidStart
+		sessionMins = diffTime.total_seconds() // 60
+
+		# End session
+		cursor.execute('''
+				UPDATE sessions 
+				SET duration = :sessiontime 
+				WHERE sid = :sid AND cid = :cid
+				''', {"sid":self._sid, "cid":self._id, "session time":sessionMins})
+		self._sid = None
+		self._sidStart = None
+		conn.commit()
+		return
 
 	# The end watch movie functionality
 	def endWatchMovie(self):
