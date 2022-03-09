@@ -284,7 +284,7 @@ class StartMenu(Menu):
 				return
 
 			if res != None:
-				input("Invalid ID. Try again?")
+				print("Invalid ID. Try again?")
 				resp = self.getUserYesOrNo()
 				if resp:
 					continue
@@ -306,7 +306,7 @@ class StartMenu(Menu):
 
 			print("Successfully registered.")
 			print()
-			newMenu = CustomerMenu()
+			newMenu = CustomerMenu(self._db, id, name)
 			newMenu.start()
 			break
 
