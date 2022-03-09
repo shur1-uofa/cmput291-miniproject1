@@ -349,8 +349,7 @@ class CustomerMenu(Menu):
 				self.startSession()
 			elif resp == "2":
 				# Do search movie stuff
-				self.startWatchMovie(10)
-				#self.search4movies()
+				self.search4movies()
 			elif resp == "3":
 				# Do end movie stuff
 				print()
@@ -358,8 +357,7 @@ class CustomerMenu(Menu):
 			elif resp == "4":
 				# Do end session stuff
 				print()
-				self.startWatchMovie(20)
-				#self.endSession()
+				self.endSession()
 			elif resp == "5":
 				print("Logging out")
 				return
