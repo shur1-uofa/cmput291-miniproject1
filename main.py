@@ -598,9 +598,10 @@ class CustomerMenu(Menu):
 					FROM movies
 					WHERE mid = :mid
 					''', {"mid":self._mid})
+			row = cursor.fetchone()
 
 			# If watchtime exceeds runtime then set watchtime to be runtime
-			if watchMins > runtime:
+			if watchMins > row["runtime"]:
 				watchMins = runtime
 
 			# End watching movie
