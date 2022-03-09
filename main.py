@@ -908,6 +908,10 @@ class EditorMenu(Menu):
 							except ValueError:
 								print("Please given a float value")
 								continue
+							# Make sure score is between 0 and 1
+							if score < 0 or score > 1:
+								print("Score must be between 0 and 1")
+								continue
 						# Now update it
 						cursor.execute("""
 								UPDATE recommendations SET score = :score 
