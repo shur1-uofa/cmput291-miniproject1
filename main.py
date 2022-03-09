@@ -363,6 +363,8 @@ class CustomerMenu(Menu):
 				return
 			elif resp == "6":
 				print("Exiting program")
+				print("Ending session")
+				self.endSession()
 				self.closeProgram()
 			else:
 				input("Invalid selection. Try again...")
