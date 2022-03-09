@@ -1039,14 +1039,26 @@ class EditorMenu(Menu):
 					cursor.execute("""INSERT INTO casts VALUES (?,?,?);""", (movie_id, cast_id, role))
 			# Cast person exists
 			else:
-				# Print cast person basic info
-				print('Name:' + str(person[0][0]) + '\nBirthYear: ' + str(person[0][1]))
-				
-				# Add role to cast person in movie with given mid
-				print("Provide role for this person ? ")
-				if self.getUserYesOrNo() == 1:
-					role = str(input("Enter the role: " ))
-					cursor.execute("""INSERT INTO casts VALUES (?,?,?);""", (movie_id, cast_id, role))
+				# Check if cast member is already casting in the movie
+				cursor.execute("""
+						SELECT (1)
+						FROM casts 
+						WHERE mid = :mid AND UPPER(pid) = UPPER(:pid) 
+						""", {"mid":movie_id, "pid":cast_id})
+				res = cursor.fetchone()
+				# If cast member has no role in the movie then ask for adding
+				if res == None:
+					# Print cast person basic info
+					print('Name:' + str(person[0][0]) + '\nBirthYear: ' + str(person[0][1]))
+					# Add role to cast person in movie with given mid
+					print("Provide role for this person ? ")
+					if self.getUserYesOrNo() == 1:
+						role = str(input("Enter the role: " ))
+						cursor.execute("""INSERT INTO casts VALUES (?,?,?);""", (movie_id, cast_id, role))
+				# Else, disallow addition of cast member
+				else:
+					print("Cast member is already in the movie")
+
 			print("Add more cast members ?")
 			if self.getUserYesOrNo() == 0:
 				break
