@@ -559,7 +559,7 @@ class CustomerMenu(Menu):
 			cursor.execute('''
 					UPDATE watch 
 					SET duration = :watchtime 
-					WHERE mid = :mid AND sid = :sid AND cid = :cid
+					WHERE mid = :mid AND sid = :sid AND UPPER(cid) = UPPER(:cid)
 					''', {"mid":self._mid, "sid":self._sid, "cid":self._id, "watchtime":watchMins})
 			self._mid = None
 			self._midStart = None
@@ -573,7 +573,7 @@ class CustomerMenu(Menu):
 		cursor.execute('''
 				UPDATE sessions 
 				SET duration = :sessiontime 
-				WHERE sid = :sid AND cid = :cid
+				WHERE sid = :sid AND cid = UPPER(:cid)
 				''', {"sid":self._sid, "cid":self._id, "sessiontime":sessionMins})
 		self._sid = None
 		self._sidStart = None
@@ -610,7 +610,7 @@ class CustomerMenu(Menu):
 			cursor.execute('''
 					UPDATE watch
 					SET duration = :watchtime
-					WHERE mid = :mid AND sid = :sid AND cid = :cid
+					WHERE mid = :mid AND sid = :sid AND UPPER(cid) = UPPER(:cid)
 					''', {"mid":self._mid, "sid":self._sid, "cid":self._id, "watchtime":watchMins})
 			self._mid = None
 			self._midStart = None
@@ -632,7 +632,7 @@ class CustomerMenu(Menu):
 			cursor.execute("""
 					UPDATE watch
 					SET duration = NULL
-					WHERE sid = :sid AND cid = :cid AND mid = :mid
+					WHERE sid = :sid AND UPPER(cid) = UPPER(:cid) AND mid = :mid
 					""", {"sid":self._sid, "cid":self._id, "mid":mid})
 		else:
 			# Otherwise we add in a new row to watch table with NULL duration
@@ -687,7 +687,7 @@ class CustomerMenu(Menu):
 		cursor.execute('''
 				UPDATE watch 
 				SET duration = :watchtime 
-				WHERE mid = :mid AND sid = :sid AND cid = :cid
+				WHERE mid = :mid AND sid = :sid AND UPPER(cid) = UPPER(:cid)
 				''', {"mid":self._mid, "sid":self._sid, "cid":self._id, "watchtime":watchMins})
 		self._mid = None
 		self._midStart = None
