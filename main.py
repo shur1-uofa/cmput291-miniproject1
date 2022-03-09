@@ -438,47 +438,43 @@ class CustomerMenu(Menu):
 			return
 
 		# Check if a movie is being currently watched
-		if self._mid == None:
-			# If no movies being watched then return
-			print("No movie is being watched.")
-			return
+		if self._mid != None:
 		
-		# Find minutes watched
-		watchTime = datetime.datetime.now() - self._midStart
-		watchMins = watchTime.total_seconds() // 60
+			# Find minutes watched
+			diffTime = datetime.datetime.now() - self._midStart
+			watchMins = diffTime.total_seconds() // 60
 
-		# Get runtime of movie (and also title)
-		cursor.execute('''
-				SELECT title, runtime 
-				FROM movies
-				WHERE mid = :mid
-				''', {"mid": self._mid})
-		row = cursor.fetchone()
-		runtime = row["runtime"]
-		mtitle = row["title"]
+			# Get runtime of movie (and also title)
+			cursor.execute('''
+					SELECT title, runtime 
+					FROM movies
+					WHERE mid = :mid
+					''', {"mid": self._mid})
+			row = cursor.fetchone()
+			runtime = row["runtime"]
+			mtitle = row["title"]
 		
-		# Check if current movie has finished watching
-		if watchMins > runtime:
-			print("No movie is being watched in this session")
-			watchMins = runtime
-		else:
-			print("You are currently watching " + mtitle)
-			print("Do you want to stop watching it and end the session?")
-			resp = self.getUserYesOrNo()
-			# If reply is no then return    
-			if not resp:
-				print("Going back to main menu")
-				return
+			# Check if current movie has finished watching
+			if watchMins > runtime:
+				watchMins = runtime
+			else:
+				print("You are currently watching " + mtitle)
+				print("Do you want to stop watching it and end the session?")
+				resp = self.getUserYesOrNo()
+				# If reply is no then return    
+				if not resp:
+					print("Going back to main menu")
+					return
 
-		# End watching movie
-		cursor.execute('''
-				UPDATE watch 
-				SET duration = :watchtime 
-				WHERE mid = :mid AND sid = :sid AND cid = :cid
-				''', {"mid":self._mid, "sid":self._sid, "cid":self._id, "watchtime":watchMins})
-		self._mid = None
-		self._midStart = None
-		conn.commit()
+			# End watching movie
+			cursor.execute('''
+					UPDATE watch 
+					SET duration = :watchtime 
+					WHERE mid = :mid AND sid = :sid AND cid = :cid
+					''', {"mid":self._mid, "sid":self._sid, "cid":self._id, "watchtime":watchMins})
+			self._mid = None
+			self._midStart = None
+			conn.commit()
 
 		# Find minutes of the session
 		sessionTime = datetime.datetime.now() - self._sidStart
@@ -489,9 +485,10 @@ class CustomerMenu(Menu):
 				UPDATE sessions 
 				SET duration = :sessiontime 
 				WHERE sid = :sid AND cid = :cid
-				''', {"sid":self._sid, "cid":self._id, "session time":sessionMins})
+				''', {"sid":self._sid, "cid":self._id, "sessiontime":sessionMins})
 		self._sid = None
 		self._sidStart = None
+		print("Your session has now ended")
 		conn.commit()
 		return
 	
