@@ -647,7 +647,7 @@ class CustomerMenu(Menu):
 
 			# If watchtime exceeds runtime then set watchtime to be runtime
 			if watchMins > row["runtime"]:
-				watchMins = runtime
+				watchMins = row["runtime"]
 
 			# End watching movie
 			cursor.execute('''
