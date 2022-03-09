@@ -349,7 +349,7 @@ class CustomerMenu(Menu):
 				self.startSession()
 			elif resp == "2":
 				# Do search movie stuff
-				print()
+				self.search4movies()
 			elif resp == "3":
 				# Do end movie stuff
 				print()
@@ -367,16 +367,97 @@ class CustomerMenu(Menu):
 				input("Invalid selection. Try again...")
 				continue
 
+	def search4movies(self):
+		#Prompt user and get results
+		print("---Searching for a movie---")
+		user_input = str(input("Search for a movie: "))
+		movieResults = self.getSearchResults(user_input)
+		movieIndex = 0
+		
+		while True:
+			#print out movie choices
+			print("---Page "+ str(int(movieIndex/4)+1) +" search results for '" +user_input +"'---\n")
+			x = 0
+			while x < 5:
+				try:
+					print("    " + str(movieResults[movieIndex+x][1]) +" - " + str(x+1))
+				except IndexError:
+					break
+				x += 1
+			
+			#print out other choices
+			print("\nSee more matches? - " + str(x+1))
+			print("See previous matches? - " + str(x+2))
+			print("Exit? - "+ str(x+3))
+				
+			resp = str(input("\nYour selection: ")).strip()
+				
+			#Response is see more matches
+			if resp == str(x+1):
+				if movieIndex + 5 < len(movieResults):
+					movieIndex += 5
+				else:
+                                        input("No more matches. Enter anything to continue")
+			# response is exit
+			elif resp == str(x+3):
+				break
+			 # response is previous matches
+			elif resp == str(x+2):
+				if movieIndex - 5 >= 0:
+					movieIndex -= 5
+				else:
+                                        input("You've reached the starting page. Enter anything to continue")
+			# movie is selected
+			elif resp >= '1' and resp <= str(x):
+				# Get cursor and conn objects
+				conn = self._db.getConn()
+				cursor = self._db.getCursor()
+					
+				#get movie details
+				cursor.execute("""SELECT year, runtime FROM movies WHERE mid = :mid2;""", {'mid2': movieResults[movieIndex+int(resp)-1] [0]})
+				yrAndRt = cursor.fetchone()
+				cursor.execute("""SELECT c.pid, p.name FROM casts c, moviePeople p WHERE c.mid = :mid2 AND c.pid = p.pid;""", {'mid2' : movieResults[movieIndex+int(resp)-1] [0]})
+				castsIdAndName = cursor.fetchall()
+					
+				while True:
+					#print movie details and cast member choices
+					print("---"+ str(movieResults[movieIndex+int(resp)-1] [1])+"---")
+					print("Year of release: "+ str(yrAndRt[0]))
+					print("Runtime: " + str(yrAndRt[1]) + " minutes")
+					print("Cast members: \n")
+					y = 1	
+					for x in castsIdAndName:
+						print("    " + x[1] + " - " + str(y))
+						y+=1
+					#print other choices
+					print("\nWatch movie? - " + str(y))
+					print("Exit? - " + str(y+1))
+					resp2 = str(input("\nYour Selection: "))
+						
+					#response is watch the movie
+					if resp2 == str(y):
+						print("watching movie...") # put startWatchMovie() function here
+					# response is exit
+					elif resp2 == str(y+1):
+						break
+					#response is follow a movie person
+					elif resp2 >= '1' and resp2 < str(y):
+						try:
+							cursor.execute("""INSERT INTO follows VALUES (?,?);""", (self._id, castsIdAndName[int(resp2)-1][0]))
+							conn.commit()
+							input("You followed " + castsIdAndName[int(resp2)-1][1] + ". Enter anything to continue ")
+						except sqlite3.IntegrityError:
+							input("You are already following this person. Enter anything to continue ")
+					else:
+						input("Invalid Input. Enter anything to continue ")
+
 	#Prompts a user for movie keywords and
 	#returns a list of all movies ordered by number of matches
 	#Output_format: list of tuples of the form (mid, title, numberofmatches)
-	def search4movies(self):
+	def getSearchResults(self, movie_input):
 		# Get cursor and conn objects
 		conn = self._db.getConn()
 		cursor = self._db.getCursor()
-
-		#User Searches for movie
-		movie_input = str(input("Search for a movie: "))
 
 		#Identify keywords of user input
 		split_input = movie_input.split()
