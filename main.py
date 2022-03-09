@@ -876,7 +876,11 @@ class EditorMenu(Menu):
 							except ValueError:
 								print("Please give an float value")
 								continue
-	
+							# Make sure score is between 0 and 1
+							if score < 0 or score > 1:
+								print("Score must be between 0 and 1")
+								continue
+
 						# Insert into database
 						cursor.execute("INSERT INTO recommendations VALUES(?, ?, ?)", 
 								(row["mid1"], row["mid2"], score))
