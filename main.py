@@ -14,7 +14,7 @@ class Database():
 
 
 	# Try open given database along with its schema text
-	# Return false if failure. 
+	# Return False if failure or True if success
 	def open(self, DBPATH, SCHEMAPATH):
 		if not self.isDBPresent(DBPATH):
 			success  = self.createDB(DBPATH, SCHEMAPATH)
@@ -33,17 +33,20 @@ class Database():
 		return os.path.exists(DBPATH)
 
 
-	# Create database with the specified schema file provided
+	# Create database at DBPATH by running the sql in SCHEMAPATH file
 	# Return True if success. False otherwise
 	def createDB(self, DBPATH, SCHEMAPATH):
 
 		with open(SCHEMAPATH, 'r') as f:
 			script = f.read()
 			try:
+				# Set up connection
 				self._conn = sqlite3.connect(DBPATH)
+				# Set up cursor (with Row rowfactory option)
 				self._conn.row_factory = sqlite3.Row
 				self._cursor = self._conn.cursor()
 
+				# Run the script given inside SCHEMAPATH
 				self._cursor.executescript(script)
 				self._conn.commit()
 
@@ -57,12 +60,14 @@ class Database():
 		return True
 
 
-	# Connect to database given by DBPATH global var
+	# Connect to database given by DBPATH
 	# Return True if success. False otherwise
 	def connectToDB(self, DBPATH):
 
 		try:
+			# Set up connection
 			self._conn = sqlite3.connect(DBPATH)
+			# Set up cursor with Row rowfactory option
 			self._conn.row_factory = sqlite3.Row
 			self._cursor = self._conn.cursor()
 			self._conn.commit()
@@ -107,6 +112,7 @@ class Menu():
 	# Returns True if Yes. Return False if No. 
 	def getUserYesOrNo(self):
 		resp = ""
+		# Until and "Y" or "N" response is given, keep looping
 		while resp != "N" and resp != "Y":
 			resp = input("N or Y: ").strip().upper()
 			if resp == "Y":
@@ -118,7 +124,7 @@ class Menu():
 
 	# Close the program by closing the database as well then exit
 	def closeProgram(self):
-		# Delete database object
+		# Delete database object (which also closes DB by its destructor)
 		del self._db
 		# Skadoosh... leave. 
 		exit()
@@ -167,6 +173,7 @@ class StartMenu(Menu):
 
 			# Try logging in as customer
 			try:
+				# See if a customer with given input id exists in customers table
 				cursor.execute("SELECT * FROM customers WHERE UPPER(cid) = UPPER(:id)", { "id":id })
 				row = cursor.fetchone()
 			except sqlite3.Error as e:
@@ -186,12 +193,14 @@ class StartMenu(Menu):
 			elif row != None and row["pwd"] == pwd:
 
 				print("Welcome " + row["name"])
+				# Go into customer menu
 				newMenu = CustomerMenu(self._db, id, row["name"])
 				newMenu.start()
 				break
 
 			# Try logging in as editor
 			try:
+				# Check if an editor with given input id is in editors table
 				cursor.execute("SELECT * FROM editors WHERE UPPER(eid) = UPPER(:id)",{ "id":id })
 				row = cursor.fetchone()
 			except sqlite3.Error as e:
@@ -211,6 +220,7 @@ class StartMenu(Menu):
 			else:
 
 				print("Welcome editor " + id)
+				# Go into editor menu
 				newMenu = EditorMenu(self._db, id)
 				newMenu.start()
 				break
@@ -255,7 +265,10 @@ class StartMenu(Menu):
 			# First it cannot have the same id as an editor's
 			try:
 				# Check if an editor with the given register id exists
-				cursor.execute("SELECT 1 FROM editors WHERE UPPER(eid) = UPPER(:id) LIMIT 1", { "id": id } )
+				cursor.execute("""
+						SELECT 1 FROM editors 
+						WHERE UPPER(eid) = UPPER(:id) LIMIT 1
+						""", { "id": id } )
 				res = cursor.fetchone()
 			except sqlite3.Error as e:
 				print("Something went wrong with sqlite3")
@@ -274,7 +287,10 @@ class StartMenu(Menu):
 
 			# Now check if id already exists as customer id 
 			try:
-				cursor.execute("SELECT 1 FROM customers WHERE UPPER(cid) = UPPER(:id) LIMIT 1", { "id": id} )
+				cursor.execute("""
+						SELECT 1 FROM customers 
+						WHERE UPPER(cid) = UPPER(:id) LIMIT 1
+						""", { "id": id} )
 				res = cursor.fetchone()
 			except sqlite3.Error as e:
 				print("Something went wrong with sqlite3")
@@ -282,6 +298,7 @@ class StartMenu(Menu):
 				print()
 				return
 
+			# If id is taken by customer then give a try again prompt
 			if res != None:
 				print("Invalid ID. Try again?")
 				resp = self.getUserYesOrNo()
@@ -290,8 +307,9 @@ class StartMenu(Menu):
 				else:
 					break
 
-			# Now since ID is unique, and we checked little things, it should be good to go
+			# At this point, ID should be good to go
 			try:
+				# Insert the new customer information to DB
 				cursor.execute("INSERT INTO customers VALUES(?, ?, ?)", (id, name, pwd))
 				conn.commit()
 			except sqlite3.Error as e:
@@ -299,9 +317,6 @@ class StartMenu(Menu):
 				print(e)
 				print()
 				return
-
-			self._id = id
-			self._name = name
 
 			print("Successfully registered.")
 			print()
@@ -312,7 +327,9 @@ class StartMenu(Menu):
 		return
 
 
-
+# This is our CustomerMenu class.
+# It encapsulates login information of the customer and
+# has various methods related to the Customer
 class CustomerMenu(Menu):
 
 	def __init__(self, db, id, name):
@@ -342,7 +359,6 @@ class CustomerMenu(Menu):
 			print("Exit program - 6")
 			resp = str(input("Your selection: ")).strip()
 
-			# TODO: fill out functionalities
 			if resp == "1":
 				# Do start session stuff
 				print("Starting a session")
@@ -374,10 +390,13 @@ class CustomerMenu(Menu):
 		#Prompt user and get results
 		print("---Searching for a movie---")
 		user_input = str(input("Search for a movie: "))
+		# Query for movies with the given user_input
 		movieResults = self.getSearchResults(user_input)
+		
 		if len(movieResults) == 0:
 			input("No matches. Enter anything to continue ")
 			return
+		
 		movieIndex = 0
 		
 		# Get cursor and conn objects
@@ -385,7 +404,7 @@ class CustomerMenu(Menu):
 		cursor = self._db.getCursor()
 		
 		while True:
-			#print out movie choices
+			# Print out movie choices
 			print("---Page "+ str(int(movieIndex/4)+1) +" search results for '" +user_input +"'---\n")
 			x = 0
 			while x < 5:
@@ -397,29 +416,29 @@ class CustomerMenu(Menu):
 					break
 				x += 1
 			
-			#print out other choices
+			# Print out other choices
 			print("\nSee more matches? - " + str(x+1))
 			print("See previous matches? - " + str(x+2))
 			print("Exit? - "+ str(x+3))
 				
 			resp = str(input("\nYour selection: ")).strip()
 				
-			#Response is see more matches
+			# Response is see more matches
 			if resp == str(x+1):
 				if movieIndex + 5 < len(movieResults):
 					movieIndex += 5
 				else:
-                                        input("No more matches. Enter anything to continue")
-			# response is exit
+				 input("No more matches. Enter anything to continue")
+			# Response is exit
 			elif resp == str(x+3):
 				break
-			 # response is previous matches
+			# Response is previous matches
 			elif resp == str(x+2):
 				if movieIndex - 5 >= 0:
 					movieIndex -= 5
 				else:
-                                        input("You've reached the starting page. Enter anything to continue")
-			# movie is selected
+					input("You've reached the starting page. Enter anything to continue")
+			# Movie is selected
 			elif resp >= '1' and resp <= str(x):
 				#get movie details
 				cursor.execute("""SELECT year, runtime FROM movies WHERE mid = :mid2;""", {'mid2': movieResults[movieIndex+int(resp)-1] [0]})
@@ -499,24 +518,32 @@ class CustomerMenu(Menu):
 		conn = self._db.getConn()
 		cursor = self._db.getCursor()
 
+		# Get a new session id by setting it as MAX(sid) + 1 
 		cursor.execute("SELECT MAX(sid) FROM sessions")
 		max_id = cursor.fetchone()[0]
 		if max_id == None:
 			new_id = 1
 		else:
 			new_id = int(max_id) + 1
-		if self._sidStart == None:
+
+		# Start a session if a session isn't going on (self._sid == None)
+		if self._sid == None:
+			# Get sdate and session start datetime 
 			session_date = datetime.date.today()
 			session_start_time = datetime.datetime.now()
+			
 			cursor.execute("""INSERT INTO sessions VALUES (?,?,?,NULL);""", (new_id, self._id, session_date))
+			
+			# Set object private variables
 			self._sid = new_id
 			self._sidStart = session_start_time
 			print("Session started successfully")
 			conn.commit()
+		# Otherwise, return
 		else:
 			print("There is already a session running")
 	
-	# Prompts a user to end a session and any movies being watched in the session
+	# Prompts a user to end a session and end a moviebeing watched in the session
 	def endSession(self):
 		# Get cursor and conn objects
 		conn = self._db.getConn()
@@ -563,6 +590,7 @@ class CustomerMenu(Menu):
 					SET duration = :watchtime 
 					WHERE mid = :mid AND sid = :sid AND UPPER(cid) = UPPER(:cid)
 					''', {"mid":self._mid, "sid":self._sid, "cid":self._id, "watchtime":watchMins})
+			# Update object private variables
 			self._mid = None
 			self._midStart = None
 			conn.commit()
@@ -577,11 +605,13 @@ class CustomerMenu(Menu):
 				SET duration = :sessiontime 
 				WHERE sid = :sid AND cid = UPPER(:cid)
 				''', {"sid":self._sid, "cid":self._id, "sessiontime":sessionMins})
+		# Update object private variables
 		self._sid = None
 		self._sidStart = None
 		print("Your session has now ended")
 		conn.commit()
 		return
+
 
 	# Start watching a movie with given mid (also end watching a movie if there is one being watched)
 	def startWatchMovie(self, mid):
@@ -691,13 +721,15 @@ class CustomerMenu(Menu):
 				SET duration = :watchtime 
 				WHERE mid = :mid AND sid = :sid AND UPPER(cid) = UPPER(:cid)
 				''', {"mid":self._mid, "sid":self._sid, "cid":self._id, "watchtime":watchMins})
+		# Update object private vars
 		self._mid = None
 		self._midStart = None
 		conn.commit()
 		return
 
 
-
+# The EditorMenu class stores functions 
+# that is related to editors
 class EditorMenu(Menu):
 
 	def __init__(self, db, id):
@@ -718,7 +750,6 @@ class EditorMenu(Menu):
 			print("Exit program - 4")
 			resp = str(input("Your selection: ")).strip()
 
-			# TODO: fill out functionalities
 			if resp == "1":
 				# Do add movie stuff
 				print("--- Add a movie ---")
@@ -774,6 +805,7 @@ class EditorMenu(Menu):
 			rowString = str(index) + ". "
 			rowString += str(row["count"]) + " Customers watched mid " + str(row["mid1"]) + " "
 			rowString += "also watched mid " + str(row["mid2"])
+			# If row is in recommendations list then get its score
 			if row["indic"] == 1:
 				rowString += " IN recommendations list score "
 				# Get score
@@ -784,15 +816,14 @@ class EditorMenu(Menu):
 						""", { "wid":row["mid1"], "rid":row["mid2"]})
 				score = cursor.fetchone()["score"]
 				rowString += str(score)
+			# Otherwise dont have to get the score
 			elif row["indic"] == None:
 				rowString += " NOT in recommendations list"
-			else:
-				print("Error. Indicator is unexpected value")
-				print(row["indic"])
-
+			
 			print(rowString)
 			index += 1
 	
+
 		while True:
 			# Ask for the user to choose an index
 			print("Select a pair by its index")
@@ -821,6 +852,7 @@ class EditorMenu(Menu):
 					print("Add to recommendations list - 1")
 					print("Back - 2")
 					resp = input("Type in your selection: ")
+					
 					if resp == "1":
 					
 						# Get score
@@ -900,6 +932,7 @@ class EditorMenu(Menu):
 		conn = self._db.getConn()
 		cursor = self._db.getCursor()
 
+		# Check the time range given
 		if timerange == 'monthly':
 			datestring = { 'date' : (datetime.date.today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d') }
 		elif timerange == 'annual':
@@ -962,18 +995,27 @@ class EditorMenu(Menu):
 			else:
 				break
 		while True:
+			# Ask for valid cast id 
 			while True:
 				try:
 					cast_id = int(input("Enter cast id: "))
 				except ValueError:
-					print('Invalid Input.Try again.')
+					print('Invalid Input. Try again.')
 					continue
 				else:
 					break
-			cursor.execute("""SELECT m.name, m.birthyear FROM casts c, moviePeople m WHERE c.pid = m.pid AND c.pid = :cast_id;""", {'cast_id' : cast_id })
+
+			# Get cast person information
+			cursor.execute("""
+					SELECT m.name, m.birthyear 
+					FROM casts c, moviePeople m 
+					WHERE c.pid = m.pid AND c.pid = :cast_id;
+					""", {'cast_id' : cast_id })
 			person = cursor.fetchall()
+
+			# If cast person does not exist, add to database
 			if len(person) == 0:
-				print("The person does not exist in the database.")
+				print("The person does not exist in the database. Adding to database...")
 				try:
 					name = str(input("Enter name of person: " ))
 					birthyear = int(input("Enter birthyear: " ))
@@ -984,8 +1026,12 @@ class EditorMenu(Menu):
 					role = str(input("Enter the role: "))
 					cursor.execute("""INSERT INTO moviePeople VALUES (?,?,?);""", (cast_id, name, birthyear))
 					cursor.execute("""INSERT INTO casts VALUES (?,?,?);""", (movie_id, cast_id, role))
+			# Cast person exists
 			else:
+				# Print cast person basic info
 				print('Name:' + str(person[0][0]) + '\nBirthYear: ' + str(person[0][1]))
+				
+				# Add role to cast person in movie with given mid
 				print("Provide role for this person ? ")
 				if self.getUserYesOrNo() == 1:
 					role = str(input("Enter the role: " ))
@@ -1010,6 +1056,7 @@ def main():
 		print("Too many arguments")
 		return
 
+	# Get our file paths
 	DBPATH = sys.argv[1]
 	SCHEMAPATH = sys.argv[2]
 
