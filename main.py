@@ -456,7 +456,7 @@ class CustomerMenu(Menu):
 					print("Year of release: "+ str(yrAndRt[0]))
 					print("Runtime: " + str(yrAndRt[1]) + " minutes")
 					print("Cast members: \n")
-					y = 1	
+					y = 1   
 					for x in castsIdAndName:
 						print("    " + x[1] + " - " + str(y))
 						y+=1
@@ -901,7 +901,7 @@ class EditorMenu(Menu):
 					print("Back - 3")
 					resp = input("Type in your selection: ")
 
-					if resp == "1":	
+					if resp == "1": 
 						# Get the score
 						print("To what score will you update it to?")
 						score = ""
