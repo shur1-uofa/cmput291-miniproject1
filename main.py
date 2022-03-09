@@ -491,7 +491,65 @@ class CustomerMenu(Menu):
 		print("Your session has now ended")
 		conn.commit()
 		return
-	
+
+	# Start watching a movie with given mid (also end watching a movie if there is one being watched)
+	def startWatchMovie(self, mid):
+		# Get cursor and conn object
+		cursor = self._db.getCursor()
+		conn = self._db.getConn()
+
+		# Since one movie can be watched at a time, stop watching the current movie
+		if self._mid != None:
+			# Stop watching the movie
+			# Get difference in minutes
+			diffTime = datetime.datetime.now() - self._midStart
+			watchMins = diffTime.total_seconds() // 60
+
+			# Get runtime of movie watching
+			cursor.execute('''
+					SELECT runtime
+					FROM movies
+					WHERE mid = :mid
+					''', {"mid":self._mid})
+
+			# If watchtime exceeds runtime then set watchtime to be runtime
+			if watchMins > runtime:
+				watchMins = runtime
+
+			# End watching movie
+			cursor.execute('''
+					UPDATE watch
+					SET duration = :watchtime
+					WHERE mid = :mid AND sid = :sid AND cid = :cid
+					''', {"mid":self._mid, "sid":self._sid, "cid":self._id, "watchtime":watchMins})
+			# Commit after we start watching a movie
+
+		# Now watch a movie
+		# If in the same session, the movie has been watched then...
+		# Idk, the assignment spec did not cover this.
+		# Since there is no mention of continuing where you left off at
+		# I will just start the movie from begining..
+
+		cursor.execute("""
+				SELECT * FROM watch 
+				WHERE sid = :sid AND UPPER(cid) = UPPER(:cid) AND mid = :mid
+				""", {"sid":self._sid, "cid":self._id, "mid":mid})
+		# If the movie has already been watched in the same session...
+		if len(cursor.fetchall()) != 0:
+			# Then set the watch duration to be NULL
+			cursor.execute("""
+					UPDATE watch
+					SET duration = NULL
+					WHERE sid = :sid AND cid = :cid AND mid = :mid
+					""", {"sid":self._sid, "cid":self._id, "mid":mid})
+			conn.commit()
+			return
+		# Otherwise, we have to add in a new row to watch table with NULL duration
+		cursor.execute("INSERT INTO watch VALUES (?, ?, ?, NULL)", (self._sid, self._id, mid))
+		conn.commit()
+		return
+
+
 	# The end watch movie functionality
 	def endWatchMovie(self):
 		# Get cursor and conn objects
