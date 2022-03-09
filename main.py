@@ -349,7 +349,8 @@ class CustomerMenu(Menu):
 				self.startSession()
 			elif resp == "2":
 				# Do search movie stuff
-				self.search4movies()
+				self.startWatchMovie(10)
+				#self.search4movies()
 			elif resp == "3":
 				# Do end movie stuff
 				print()
@@ -357,7 +358,8 @@ class CustomerMenu(Menu):
 			elif resp == "4":
 				# Do end session stuff
 				print()
-				self.endSession()
+				self.startWatchMovie(20)
+				#self.endSession()
 			elif resp == "5":
 				print("Logging out")
 				return
@@ -504,6 +506,7 @@ class CustomerMenu(Menu):
 			session_date = datetime.date.today()
 			session_start_time = datetime.datetime.now()
 			cursor.execute("""INSERT INTO sessions VALUES (?,?,?,NULL);""", (new_id, self._id, session_date))
+			self._sid = new_id
 			self._sidStart = session_start_time
 			print("Session started successfully")
 			conn.commit()
@@ -607,6 +610,8 @@ class CustomerMenu(Menu):
 					SET duration = :watchtime
 					WHERE mid = :mid AND sid = :sid AND cid = :cid
 					''', {"mid":self._mid, "sid":self._sid, "cid":self._id, "watchtime":watchMins})
+			self._mid = None
+			self._midStart = None
 			# Commit after we start watching a movie
 
 		# Now watch a movie
@@ -627,11 +632,13 @@ class CustomerMenu(Menu):
 					SET duration = NULL
 					WHERE sid = :sid AND cid = :cid AND mid = :mid
 					""", {"sid":self._sid, "cid":self._id, "mid":mid})
-			conn.commit()
-			return
-		# Otherwise, we have to add in a new row to watch table with NULL duration
-		cursor.execute("INSERT INTO watch VALUES (?, ?, ?, NULL)", (self._sid, self._id, mid))
+		else:
+			# Otherwise we add in a new row to watch table with NULL duration
+			cursor.execute("INSERT INTO watch VALUES (?, ?, ?, NULL)", (self._sid, self._id, mid))
+		
 		conn.commit()
+		self._mid = mid
+		self._midStart = datetime.datetime.now()
 		return
 
 
