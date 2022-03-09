@@ -380,13 +380,19 @@ class CustomerMenu(Menu):
 			return
 		movieIndex = 0
 		
+		# Get cursor and conn objects
+		conn = self._db.getConn()
+		cursor = self._db.getCursor()
+		
 		while True:
 			#print out movie choices
 			print("---Page "+ str(int(movieIndex/4)+1) +" search results for '" +user_input +"'---\n")
 			x = 0
 			while x < 5:
 				try:
-					print("    " + str(movieResults[movieIndex+x][1]) +" - " + str(x+1))
+					cursor.execute("""SELECT year, runtime FROM movies WHERE mid = :mid2;""",{'mid2' : movieResults[movieIndex+x][0]})
+					movie_details = cursor.fetchone()
+					print("    " + str(movieResults[movieIndex+x][1]) + " ( "+ str(movie_details[0])+" ) "+" ( "+ str(movie_details[1])+" minutes ) - " + str(x+1))
 				except IndexError:
 					break
 				x += 1
@@ -415,10 +421,6 @@ class CustomerMenu(Menu):
                                         input("You've reached the starting page. Enter anything to continue")
 			# movie is selected
 			elif resp >= '1' and resp <= str(x):
-				# Get cursor and conn objects
-				conn = self._db.getConn()
-				cursor = self._db.getCursor()
-					
 				#get movie details
 				cursor.execute("""SELECT year, runtime FROM movies WHERE mid = :mid2;""", {'mid2': movieResults[movieIndex+int(resp)-1] [0]})
 				yrAndRt = cursor.fetchone()
