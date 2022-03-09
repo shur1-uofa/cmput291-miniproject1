@@ -506,9 +506,9 @@ class CustomerMenu(Menu):
 		for x in split_input:
 			cursor.execute("""UPDATE movies
 						SET runtime = runtime + 1
-						WHERE title LIKE '%'||:x||'%'
-						OR EXISTS ( SELECT * FROM casts c, moviePeople p WHERE movies.mid = c.mid AND p.pid = c.pid AND p.name LIKE '%'||:x||'%')
-						OR EXISTS ( SELECT * FROM casts c WHERE movies.mid = c.mid AND c.role LIKE '%'||:x||'%');""",{'x' : x})
+						WHERE UPPER(title) LIKE '%'||:x||'%'
+						OR EXISTS ( SELECT * FROM casts c, moviePeople p WHERE movies.mid = c.mid AND p.pid = c.pid AND UPPER(p.name) LIKE '%'||:x||'%')
+						OR EXISTS ( SELECT * FROM casts c WHERE movies.mid = c.mid AND UPPER(c.role) LIKE '%'||:x||'%');""",{'x' : x.upper()})
 
 		#select and order results
 		cursor.execute("""SELECT mid, title, runtime
@@ -1016,7 +1016,7 @@ class EditorMenu(Menu):
 			cursor.execute("""
 					SELECT m.name, m.birthyear 
 					FROM casts c, moviePeople m 
-					WHERE c.pid = m.pid AND c.pid = :cast_id;
+					WHERE c.pid = m.pid AND UPPER(c.pid) = UPPER(:cast_id);
 					""", {'cast_id' : cast_id })
 			person = cursor.fetchall()
 
