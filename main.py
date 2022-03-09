@@ -872,13 +872,13 @@ class EditorMenu(Menu):
 						while True:
 							try:
 								score = float(input("Input score here: ").strip())
+								# Make sure score is between 0 and 1
+								if score < 0.0 or score > 1.0:
+									print("Score must be between 0 and 1")
+									continue
 								break
 							except ValueError:
 								print("Please give an float value")
-								continue
-							# Make sure score is between 0 and 1
-							if score < 0 or score > 1:
-								print("Score must be between 0 and 1")
 								continue
 
 						# Insert into database
@@ -908,13 +908,13 @@ class EditorMenu(Menu):
 						while True:
 							try:
 								score = float(input("Input score here: ").strip())
+								# Make sure score is between 0 and 1
+								if score < 0.0 or score > 1.0:
+									print("Score must be between 0 and 1")
+									continue
 								break
 							except ValueError:
 								print("Please given a float value")
-								continue
-							# Make sure score is between 0 and 1
-							if score < 0 or score > 1:
-								print("Score must be between 0 and 1")
 								continue
 						# Now update it
 						cursor.execute("""
